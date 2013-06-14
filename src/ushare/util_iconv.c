@@ -18,6 +18,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <stdafx.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -165,6 +167,6 @@ iconv_convert (const char *input)
 
   return result;
 #else
-  return strdup (input);
+  return _strdup (input);
 #endif
 }

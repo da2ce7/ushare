@@ -1,5 +1,5 @@
 /*
- * content.h : GeeXboX uShare content list header
+ * util_iconv.h : GeeXboX uShare iconv string encoding utilities headers.
  * Originally developped for the GeeXboX project.
  * Copyright (C) 2005-2007 Alexis Saettler <asbin@asbin.org>
  *
@@ -18,19 +18,19 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef _CONTENT_H_
-#define _CONTENT_H_
+#ifndef _UTIL_ICONV_H_
+#define _UTIL_ICONV_H_
 
-typedef struct content_list_s {
-  char **content;
-  int count;
-} content_list_t;
+void setup_iconv (void);
+void finish_iconv (void);
 
-content_list_t *content_add (content_list_t *list, const char *item)
-    __attribute__ ((malloc));
-content_list_t *content_del (content_list_t *list, int n)
-    __attribute__ ((nonnull));
-void content_free (content_list_t *list)
-    __attribute__ ((nonnull));
+#ifdef _MSC_VER
+char *iconv_convert (const char *inbuf);
+#else
+char *iconv_convert (const char *inbuf)
+    __attribute__ ((malloc, nonnull, format_arg (1)));
+#endif
+
+#define UTF8 "UTF-8"
 
 #endif

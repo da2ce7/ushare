@@ -19,14 +19,16 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <stdafx.h>
+
 #include <stdio.h>
 #include <signal.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <unistd.h>
+
 #include <errno.h>
-#include <getopt.h>
+
 
 #if (defined(BSD) || defined(__FreeBSD__) || defined(__APPLE__))
 #include <sys/socket.h>
@@ -38,11 +40,14 @@
 #include <net/route.h>
 #endif
 
+#ifdef _WIN32
+#else
 #include <net/if.h>
 #include <sys/ioctl.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdbool.h>
+
 #include <fcntl.h>
 
 #ifdef HAVE_IFADDRS_H
@@ -57,7 +62,7 @@
 # include <locale.h>
 #endif
 
-#include "config.h"
+
 #include "ushare.h"
 #include "metadata.h"
 #include "util_iconv.h"
@@ -71,6 +76,13 @@
 #include "ufam.h"
 #endif /* HAVE_FAM */
 
+
+#ifdef _MSC_VER
+static struct ushare_t * ushare_new (void);
+#else
+static struct ushare_t * ushare_new (void)
+    __attribute__ ((malloc));
+#endif
 ushare_t *ut = NULL;
 
 static ushare_t *
@@ -418,14 +430,24 @@ restart_upnp (ushare_t *ut)
   return (init_upnp (ut));
 }
 
+#ifdef _MSC_VER
+static void
+UPnPBreak (int s)
+#else
 static void
 UPnPBreak (int s __attribute__ ((unused)))
+#endif
 {
   ushare_signal_exit ();
 }
 
+#ifdef _MSC_VER
+static void
+reload_config (int s)
+#else
 static void
 reload_config (int s __attribute__ ((unused)))
+#endif
 {
   ushare_t *ut2;
   bool reload = false;
@@ -496,7 +518,7 @@ reload_config (int s __attribute__ ((unused)))
   }
 }
 
-inline void
+_inline void
 display_headers (void)
 {
   printf (_("%s (version %s), a lightweight UPnP A/V and DLNA Media Server.\n"),
@@ -505,7 +527,7 @@ display_headers (void)
   printf (_("See http://ushare.geexbox.org/ for updates.\n"));
 }
 
-inline static void
+_inline static void
 setup_i18n(void)
 {
 #ifdef CONFIG_NLS
@@ -521,10 +543,18 @@ setup_i18n(void)
 
 #define SHUTDOWN_MSG _("Server is shutting down: other clients will be notified soon, Bye bye ...\n")
 
+
+#ifdef _MSC_VER
+static void
+ushare_kill (ctrl_telnet_client_t *client,
+             int argc,
+             char **argv)
+#else
 static void
 ushare_kill (ctrl_telnet_client_t *client,
              int argc __attribute__((unused)),
              char **argv __attribute__((unused)))
+#endif
 {
   if (ut->use_telnet)
   {

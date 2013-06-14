@@ -18,6 +18,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <stdafx.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -42,7 +44,7 @@ content_add (content_list_t *list, const char *item)
       perror ("error realloc");
       exit (2);
     }
-    list->content[list->count-1] = strdup (item);
+    list->content[list->count-1] = _strdup (item);
   }
   return list;
 }

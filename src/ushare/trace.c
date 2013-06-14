@@ -1,5 +1,5 @@
 /*
- * ufam.h : GeeXboX uShare file alterative monitor headers
+ * trace.c : GeeXboX uShare log facility.
  * Originally developped for the GeeXboX project.
  * Copyright (C) 2005-2007 Alexis Saettler <asbin@asbin.org>
  *
@@ -18,43 +18,53 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef _UFAM_H_
-#define _UFAM_H_
+#include <stdafx.h>
 
-#ifdef HAVE_FAM
+#include <stdio.h>
+#include <stdarg.h>
 
-#include <fam.h>
-#include <pthread.h>
-#include <stdbool.h>
+#ifdef _WIN32
+#else
+#include <syslog.h>
+#endif
 
+
+
+#include "trace.h"
 #include "ushare.h"
-#include "metadata.h"
 
-typedef struct ufam_s {
-  FAMConnection fc;
+extern ushare_t *ut;
 
-  pthread_t thread;
-  pthread_mutex_t startstop_lock;
-  pthread_cond_t stop_cond;
-  pthread_mutex_t add_monitor_lock;
-  bool stop;
-} ufam_t;
+void
+print_log (log_level level, const char *format, ...)
+{
+  va_list va;
+  bool is_daemon = ut ? ut->daemon : false;
+  bool is_verbose = ut ? ut->verbose : false;
 
-typdef struct ufam_entry_s {
-  ufam_t *ufam;
-  struct upnp_entry_t *entry;
-  FAMRequest fr;
-} ufam_entry_t;
+  if (!format)
+    return;
 
-ufam_t *ufam_init (void);
-void ufam_free (ufam_t *ufam);
+  if (!is_verbose && level >= ULOG_VERBOSE)
+    return;
 
-void ufam_start (ushare_t *ut);
-void ufam_stop (ufam_t *ufam);
+  va_start (va, format);
+  if (is_daemon)
+  {
+    int flags = LOG_DAEMON;
+    flags |= level == ULOG_ERROR ? LOG_ERR : LOG_NOTICE;
+    vsyslog (flags, format, va);
+  }
+  else
+  {
+    FILE *output = level == ULOG_ERROR ? stderr : stdout;
+    vfprintf (output, format, va);
+  }
+  va_end (va);
+}
 
-ufam_entry_t *ufam_add_monitor (ufam_t *ufam, struct upnp_entry_t *entry);
-void ufam_remove_monitor (ufam_entry_t *ufam_entry);
-
-#endif /* HAVE_FAM */
-
-#endif /* _UFAM_H_ */
+inline void
+start_log (void)
+{
+  openlog (PACKAGE_NAME, LOG_PID, LOG_DAEMON);
+}

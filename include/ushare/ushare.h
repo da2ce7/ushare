@@ -22,10 +22,10 @@
 #ifndef _USHARE_H_
 #define _USHARE_H_
 
-#include <stdbool.h>
+
 #include <pthread.h>
 
-#include <dlna.h>
+#include <dlna/dlna.h>
 
 #include "content.h"
 #include "buffer.h"
@@ -49,7 +49,7 @@ typedef struct ushare_s {
   bool use_telnet;
   dlna_t *dlna;
   dlna_org_flags_t dlna_flags;
-  dlna_capability_mode_t caps;
+//  dlna_capability_mode_t caps; // not in later versions of libdlna
   bool verbose;
   bool daemon;
   bool override_iconv_err;
@@ -61,6 +61,6 @@ typedef struct ushare_s {
 #endif /* HAVE_FAM */
 } ushare_t;
 
-inline void display_headers (void);
+_inline void display_headers (void);
 
 #endif /* _USHARE_H_ */

@@ -1,5 +1,4 @@
-/*
- * osdep.h : GeeXboX uShare OS independant helpers headers.
+/* buffer.h - String buffer manipulation tools header.
  * Originally developped for the GeeXboX project.
  * Copyright (C) 2005-2007 Benjamin Zores <ben@geexbox.org>
  *
@@ -16,15 +15,31 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
  */
 
-#ifndef _OS_DEP_H_
-#define _OS_DEP_H_
+#ifndef _STRING_BUFFER_H_
+#define _STRING_BUFFER_H_
 
-#if (defined(BSD) || defined(__FreeBSD__))
-#include <unistd.h>
-char *strndup (const char *s, size_t n);
-ssize_t getline (char **lineptr, size_t *n, FILE *stream);
+typedef struct buffer_s {
+  char *buf;
+  size_t len;
+  size_t capacity;
+} buffer_t;
+
+#ifdef _MSC_VER
+buffer_t *buffer_new (void);
+#else
+buffer_t *buffer_new (void) __attribute__ ((malloc));
+#endif
+void buffer_free (buffer_t *buffer);
+
+void buffer_append (buffer_t *buffer, const char *str);
+#ifdef _MSC_VER
+void buffer_appendf (buffer_t *buffer, const char *format, ...);
+#else
+void buffer_appendf (buffer_t *buffer, const char *format, ...)
+    __attribute__ ((format (printf , 2, 3)));
 #endif
 
-#endif /* _OS_DEP_H_ */
+#endif /* _STRING_BUFFER_H_ */

@@ -18,6 +18,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <stdafx.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -26,7 +28,7 @@
 # include <langinfo.h>
 #endif
 
-#include "config.h"
+
 #include "metadata.h"
 #include "content.h"
 #include "buffer.h"

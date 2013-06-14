@@ -18,14 +18,16 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <stdafx.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <getopt.h>
-#include <stdbool.h>
+
+
 #include <limits.h>
 
-#include "config.h"
+
 #include "gettext.h"
 #include "cfgparser.h"
 #include "ushare.h"
@@ -310,7 +312,7 @@ parse_config_file (ushare_t *ut)
   return 0;
 }
 
-inline static void
+_inline static void
 display_usage (void)
 {
   display_headers ();

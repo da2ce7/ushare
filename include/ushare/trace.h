@@ -27,29 +27,51 @@ typedef enum {
   ULOG_VERBOSE = 3,
 } log_level;
 
+#ifdef _MSC_VER
+void print_log (log_level level, const char *format, ...);
+#else
 void print_log (log_level level, const char *format, ...)
   __attribute__ ((format (printf, 2, 3)));
-inline void start_log (void);
+#endif
 
+#ifdef _MSC_VER
+void start_log (void);
+#else
+inline void start_log (void);
+#endif
+
+
+#ifdef _MSC_VER
+void log_info(const char *fmt,...);
+#else
 /* log_info
  * Normal print, to replace printf
  */
 #define log_info(s, str...) {          \
   print_log (ULOG_NORMAL, (s), ##str); \
   }
+#endif
 
+#ifdef _MSC_VER
+void log_error(const char* fmt, ...);
+#else
 /* log_error
  * Error messages, output to stderr
  */
 #define log_error(s, str...) {        \
   print_log (ULOG_ERROR, (s), ##str); \
   }
+#endif
 
+#ifdef _MSC_VER
+void log_verbose(const char* fmt, ...);
+#else
 /* log_verbose
  * Output only in verbose mode
  */
 #define log_verbose(s, str...) {        \
   print_log (ULOG_VERBOSE, (s), ##str); \
   }
+#endif
 
 #endif /* _TRACE_H_ */

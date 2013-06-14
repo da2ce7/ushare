@@ -19,6 +19,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <stdafx.h>
+
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -26,7 +28,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+
 #include <errno.h>
 
 #include "metadata.h"

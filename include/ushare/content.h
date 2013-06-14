@@ -1,5 +1,5 @@
 /*
- * trace.c : GeeXboX uShare log facility.
+ * content.h : GeeXboX uShare content list header
  * Originally developped for the GeeXboX project.
  * Copyright (C) 2005-2007 Alexis Saettler <asbin@asbin.org>
  *
@@ -18,47 +18,25 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <syslog.h>
-#include <stdbool.h>
+#ifndef _CONTENT_H_
+#define _CONTENT_H_
 
-#include "config.h"
-#include "trace.h"
-#include "ushare.h"
+typedef struct content_list_s {
+  char **content;
+  int count;
+} content_list_t;
 
-extern ushare_t *ut;
+#ifdef _MSC_VER
+content_list_t *content_add (content_list_t *list, const char *item);
+content_list_t *content_del (content_list_t *list, int n);
+void content_free (content_list_t *list);
+#else
+content_list_t *content_add (content_list_t *list, const char *item)
+    __attribute__ ((malloc));
+content_list_t *content_del (content_list_t *list, int n)
+    __attribute__ ((nonnull));
+void content_free (content_list_t *list)
+    __attribute__ ((nonnull));
+#endif
 
-void
-print_log (log_level level, const char *format, ...)
-{
-  va_list va;
-  bool is_daemon = ut ? ut->daemon : false;
-  bool is_verbose = ut ? ut->verbose : false;
-
-  if (!format)
-    return;
-
-  if (!is_verbose && level >= ULOG_VERBOSE)
-    return;
-
-  va_start (va, format);
-  if (is_daemon)
-  {
-    int flags = LOG_DAEMON;
-    flags |= level == ULOG_ERROR ? LOG_ERR : LOG_NOTICE;
-    vsyslog (flags, format, va);
-  }
-  else
-  {
-    FILE *output = level == ULOG_ERROR ? stderr : stdout;
-    vfprintf (output, format, va);
-  }
-  va_end (va);
-}
-
-inline void
-start_log (void)
-{
-  openlog (PACKAGE_NAME, LOG_PID, LOG_DAEMON);
-}
+#endif

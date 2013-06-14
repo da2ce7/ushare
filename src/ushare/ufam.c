@@ -18,6 +18,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <stdafx.h>
+
 
 #ifdef HAVE_FAM
 
@@ -26,7 +28,7 @@
 #include <fam.h>
 #include <sys/select.h>
 #include <pthread.h>
-#include <stdbool.h>
+
 
 #include "ushare.h"
 #include "metadata.h"

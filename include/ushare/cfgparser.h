@@ -43,10 +43,15 @@
 #define DEFAULT_USHARE_IFACE      "eth0"
 #endif
 
+#ifdef _MSC_VER
+int parse_config_file (ushare_t *ut);
+int parse_command_line (ushare_t *ut, int argc, char **argv);
+#else
 int parse_config_file (ushare_t *ut)
     __attribute__ ((nonnull));
 int parse_command_line (ushare_t *ut, int argc, char **argv)
     __attribute__ ((nonnull (1)));
+#endif
 
 typedef struct {
   char *name;

@@ -1,5 +1,5 @@
 /*
- * util_iconv.h : GeeXboX uShare iconv string encoding utilities headers.
+ * ufam.h : GeeXboX uShare file alterative monitor headers
  * Originally developped for the GeeXboX project.
  * Copyright (C) 2005-2007 Alexis Saettler <asbin@asbin.org>
  *
@@ -18,14 +18,43 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef _UTIL_ICONV_H_
-#define _UTIL_ICONV_H_
+#ifndef _UFAM_H_
+#define _UFAM_H_
 
-void setup_iconv (void);
-void finish_iconv (void);
-char *iconv_convert (const char *inbuf)
-    __attribute__ ((malloc, nonnull, format_arg (1)));
+#ifdef HAVE_FAM
 
-#define UTF8 "UTF-8"
+#include <fam.h>
+#include <pthread.h>
 
-#endif
+
+#include "ushare.h"
+#include "metadata.h"
+
+typedef struct ufam_s {
+  FAMConnection fc;
+
+  pthread_t thread;
+  pthread_mutex_t startstop_lock;
+  pthread_cond_t stop_cond;
+  pthread_mutex_t add_monitor_lock;
+  bool stop;
+} ufam_t;
+
+typdef struct ufam_entry_s {
+  ufam_t *ufam;
+  struct upnp_entry_t *entry;
+  FAMRequest fr;
+} ufam_entry_t;
+
+ufam_t *ufam_init (void);
+void ufam_free (ufam_t *ufam);
+
+void ufam_start (ushare_t *ut);
+void ufam_stop (ufam_t *ufam);
+
+ufam_entry_t *ufam_add_monitor (ufam_t *ufam, struct upnp_entry_t *entry);
+void ufam_remove_monitor (ufam_entry_t *ufam_entry);
+
+#endif /* HAVE_FAM */
+
+#endif /* _UFAM_H_ */

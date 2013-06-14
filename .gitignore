@@ -1,0 +1,48 @@
+# Object files
+*.o
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Tempory Files
+*.log
+
+# old cvs files
+*.cvsignore
+
+# visual studio noise
+*.user
+*.sdf
+*ipch/
+*.userprefs
+*.opensdf
+*.sdf
+*.v11.suo
+
+# targets
+build/
+lib/
+obj/
+bin/
+
+# other include files
+include/build/
+include/ixml/
+include/threadutil/
+include/upnp/
+include/dlna/
+include/pthread.h
+include/sched.h
+include/semaphore.h
