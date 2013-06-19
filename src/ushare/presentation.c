@@ -71,27 +71,29 @@ process_cgi (struct ushare_t *ut, char *cgiargs)
   }
   else if (!strncmp (action, CGI_ACTION_DEL, strlen (CGI_ACTION_DEL)))
   {
-    char *shares,*share;
-    char *m_buffer = NULL, *buffer;
-    int num, shift=0;
+	  char *shares = _strdup (action + strlen (CGI_ACTION_DEL) + 1);
+	  char *m_buffer = (char*) malloc (strlen (shares) * sizeof (char));
 
-    shares = strdup (action + strlen (CGI_ACTION_DEL) + 1);
-    m_buffer = (char*) malloc (strlen (shares) * sizeof (char));
-    if (m_buffer)
-    {
-      buffer = m_buffer;
-      for (share = strtok_r (shares, "&", &buffer) ; share ;
-           share = strtok_r (NULL, "&", &buffer))
-      {
-        if (sscanf (share, CGI_SHARE"[%d]=on", &num) < 0)
-          continue;
-        ut->contentlist = content_del (ut->contentlist, num - shift++);
-      }
-      free (m_buffer);
-    }
+	  if (m_buffer)
+	  {
+		  int num = 0, shift=0;
+		  const char * szToken = "&";
+		  const char **szBuffer = &m_buffer;
+		  char * szShare = (char *) strtok_r (shares, szToken , szBuffer);
 
-    refresh = 1;
-    free (shares);
+		  while (szShare)
+		  {
+			  if (sscanf (szShare, CGI_SHARE"[%d]=on", &num) < 0) { continue; }
+
+			  ut->contentlist = content_del (ut->contentlist, num - shift++);
+
+			  szShare = (char *) strtok_r (NULL, szToken, szBuffer);
+		  }
+		  free (m_buffer);
+	  }
+
+	  refresh = 1;
+	  free (shares);
   }
   else if (!strncmp (action, CGI_ACTION_REFRESH, strlen (CGI_ACTION_REFRESH)))
     refresh = 1;

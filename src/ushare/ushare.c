@@ -26,9 +26,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <unistd.h>
+
 #include <errno.h>
-#include <getopt.h>
+
 
 #if (defined(BSD) || defined(__FreeBSD__) || defined(__APPLE__))
 #include <sys/socket.h>
@@ -40,11 +40,14 @@
 #include <net/route.h>
 #endif
 
+#ifdef _WIN32
+#else
 #include <net/if.h>
 #include <sys/ioctl.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdbool.h>
+
 #include <fcntl.h>
 
 #ifdef HAVE_IFADDRS_H
@@ -80,8 +83,12 @@
 
 struct ushare_t *ut = NULL;
 
+#ifdef _MSC_VER
+static struct ushare_t * ushare_new (void);
+#else
 static struct ushare_t * ushare_new (void)
     __attribute__ ((malloc));
+#endif
 
 static struct ushare_t *
 ushare_new (void)
@@ -90,9 +97,9 @@ ushare_new (void)
   if (!ut)
     return NULL;
 
-  ut->name = strdup (DEFAULT_USHARE_NAME);
-  ut->interface = strdup (DEFAULT_USHARE_IFACE);
-  ut->model_name = strdup (DEFAULT_USHARE_NAME);
+  ut->name = _strdup (DEFAULT_USHARE_NAME);
+  ut->interface = _strdup (DEFAULT_USHARE_IFACE);
+  ut->model_name = _strdup (DEFAULT_USHARE_NAME);
   ut->contentlist = NULL;
   ut->rb = rbinit (rb_compare, NULL);
   ut->root_entry = NULL;
@@ -185,36 +192,43 @@ ushare_signal_exit (void)
 }
 
 static void
-handle_action_request (struct Upnp_Action_Request *request)
+handle_action_request (IN UpnpActionRequest *request)
 {
-  struct service_t *service;
-  struct service_action_t *action;
+  struct service_t *service = NULL;
+  struct service_action_t *action = NULL;
+  const struct sockaddr_storage *sockaddrStorage = NULL;
+  const struct sockaddr_in *sockaddrIn = NULL;
   char val[256];
   uint32_t ip;
+
+
 
   if (!request || !ut)
     return;
 
-  if (request->ErrCode != UPNP_E_SUCCESS)
+  if (UpnpActionRequest_get_ErrCode(request) != UPNP_E_SUCCESS)
     return;
 
-  if (strcmp (request->DevUDN + 5, ut->udn))
+  if (strcmp (UpnpActionRequest_get_DevUDN_cstr(request) + 5, ut->udn))
     return;
 
-  ip = request->CtrlPtIPAddr.s_addr;
+  sockaddrStorage = UpnpActionRequest_get_CtrlPtIPAddr(request);
+  sockaddrIn = (struct sockaddr_in *)sockaddrStorage;
+
+  ip = sockaddrIn->sin_addr.s_addr;
   ip = ntohl (ip);
   sprintf (val, "%d.%d.%d.%d",
            (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF);
 
   if (ut->verbose)
   {
-    DOMString str = ixmlPrintDocument (request->ActionRequest);
+    DOMString str = ixmlPrintDocument (UpnpActionRequest_get_ActionRequest(request));
 
     log_verbose ("***************************************************\n");
     log_verbose ("**             New Action Request                **\n");
     log_verbose ("***************************************************\n");
-    log_verbose ("ServiceID: %s\n", request->ServiceID);
-    log_verbose ("ActionName: %s\n", request->ActionName);
+	log_verbose ("ServiceID: %s\n", UpnpActionRequest_get_ServiceID_cstr(request));
+	log_verbose ("ActionName: %s\n", UpnpActionRequest_get_ActionName_cstr(request));
     log_verbose ("CtrlPtIP: %s\n", val);
     log_verbose ("Action Request:\n%s\n", str);
     ixmlFreeDOMString (str);
@@ -228,12 +242,11 @@ handle_action_request (struct Upnp_Action_Request *request)
       event.status = true;
       event.service = service;
 
-      if (action->function (&event) && event.status)
-        request->ErrCode = UPNP_E_SUCCESS;
+	  if (action->function (&event) && event.status) UpnpActionRequest_set_ErrCode(request,UPNP_E_SUCCESS);
 
       if (ut->verbose)
       {
-        DOMString str = ixmlPrintDocument (request->ActionResult);
+        DOMString str = ixmlPrintDocument (UpnpActionRequest_get_ActionResult(request));
 
         log_verbose ("Action Result:\n%s", str);
         log_verbose ("***************************************************\n");
@@ -245,22 +258,20 @@ handle_action_request (struct Upnp_Action_Request *request)
     }
 
   if (service) /* Invalid Action name */
-    strcpy (request->ErrStr, "Unknown Service Action");
+	  UpnpActionRequest_strcpy_ErrStr(request, "Unknown Service Action");
   else /* Invalid Service name */
-    strcpy (request->ErrStr, "Unknown Service ID");
+	  UpnpActionRequest_strcpy_ErrStr(request, "Unknown Service ID");
 
-  request->ActionResult = NULL;
-  request->ErrCode = UPNP_SOAP_E_INVALID_ACTION;
+  UpnpActionRequest_set_ActionResult(request,NULL);
+  UpnpActionRequest_set_ErrCode(request,UPNP_SOAP_E_INVALID_ACTION);
 }
 
-static int
-device_callback_event_handler (Upnp_EventType type, void *event,
-                               void *cookie __attribute__((unused)))
+int device_callback_event_handler(Upnp_EventType EventType, const void *Event, void *Cookie)
 {
-  switch (type)
+  switch (EventType)
     {
     case UPNP_CONTROL_ACTION_REQUEST:
-      handle_action_request ((struct Upnp_Action_Request *) event);
+      handle_action_request ((UpnpActionRequest *) Event);
       break;
     case UPNP_CONTROL_ACTION_COMPLETE:
     case UPNP_EVENT_SUBSCRIPTION_REQUEST:
@@ -366,7 +377,15 @@ init_upnp (struct ushare_t *ut)
 
   UpnpEnableWebserver (TRUE);
 
-  res = UpnpSetVirtualDirCallbacks (&virtual_dir_callbacks);
+  {
+	  UpnpVirtualDir_set_GetInfoCallback(*callbackGetInfo);
+	  UpnpVirtualDir_set_OpenCallback(*callbackOpen);
+	  UpnpVirtualDir_set_ReadCallback(*callbackRead);
+	  UpnpVirtualDir_set_WriteCallback(*callbackWrite);
+	  UpnpVirtualDir_set_SeekCallback(*callbackSeek);
+	  UpnpVirtualDir_set_CloseCallback(*callbackClose);
+  }
+
   if (res != UPNP_E_SUCCESS)
   {
     log_error (_("Cannot set virtual directory callbacks\n"));
@@ -428,6 +447,10 @@ init_upnp (struct ushare_t *ut)
 static bool
 has_iface (char *interface)
 {
+#ifdef _MSC_VER
+
+#else
+
 #ifdef HAVE_IFADDRS_H
   struct ifaddrs *itflist, *itf;
 
@@ -511,7 +534,8 @@ has_iface (char *interface)
   }
   close (sock);
 #endif
-  
+#endif
+
   log_error (_("Can't find interface %s.\n"),interface);
   log_error (_("Recheck uShare's configuration and try again !\n"));
 
@@ -521,6 +545,19 @@ has_iface (char *interface)
 static char *
 create_udn (char *interface)
 {
+#ifdef _MSC_VER
+  char localip[32] = {0};
+  char localaddr[32] = {0};
+  char *buf = (char *) malloc (64 * sizeof (char));
+  memset (buf, 0, 64);
+  guess_default_ip(AF_INET, localip, 32);
+  get_macaddr_by_ipaddr(localip, localaddr);
+  
+  snprintf (buf, 64, "%s-%s", DEFAULT_UUID, localaddr);
+  return buf;
+
+#else
+
   int sock = -1;
   char *buf;
   unsigned char *ptr;
@@ -598,11 +635,18 @@ create_udn (char *interface)
     close (sock);
 
   return buf;
+
+#endif
 }
 
 static char *
 get_iface_address (char *interface)
 {
+#ifdef _MSC_VER
+	char *val = (char *) malloc (16 * sizeof (char));
+	guess_default_ip(AF_INET, val, 16);
+	return val;
+#else
   int sock;
   uint32_t ip;
   struct ifreq ifr;
@@ -638,6 +682,7 @@ get_iface_address (char *interface)
   close (sock);
 
   return val;
+#endif
 }
 
 static int
@@ -660,14 +705,24 @@ restart_upnp (struct ushare_t *ut)
   return (init_upnp (ut));
 }
 
+#ifdef _MSC_VER
+static void
+UPnPBreak (int s)
+#else
 static void
 UPnPBreak (int s __attribute__ ((unused)))
+#endif
 {
   ushare_signal_exit ();
 }
 
+#ifdef _MSC_VER
+static void
+reload_config (int s)
+#else
 static void
 reload_config (int s __attribute__ ((unused)))
+#endif
 {
   struct ushare_t *ut2;
   bool reload = false;
@@ -763,10 +818,17 @@ setup_i18n(void)
 
 #define SHUTDOWN_MSG _("Server is shutting down: other clients will be notified soon, Bye bye ...\n")
 
+#ifdef _MSC_VER
+static void
+ushare_kill (ctrl_telnet_client *client,
+             int argc,
+             char **argv)
+#else
 static void
 ushare_kill (ctrl_telnet_client *client,
              int argc __attribute__((unused)),
              char **argv __attribute__((unused)))
+#endif
 {
   if (ut->use_telnet)
   {
@@ -807,7 +869,7 @@ main (int argc, char **argv)
     name = malloc (strlen (XBOX_MODEL_NAME) + strlen (ut->model_name) + 4);
     sprintf (name, "%s (%s)", XBOX_MODEL_NAME, ut->model_name);
     free (ut->model_name);
-    ut->model_name = strdup (name);
+    ut->model_name = _strdup (name);
     free (name);
 
     ut->starting_id = STARTING_ENTRY_ID_XBOX360;
@@ -846,6 +908,7 @@ main (int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+#ifndef _MSC_VER
   if (ut->daemon)
   {
     int err;
@@ -859,12 +922,18 @@ main (int argc, char **argv)
     }
   }
   else
+#endif
   {
     display_headers ();
   }
 
   signal (SIGINT, UPnPBreak);
-  signal (SIGHUP, reload_config);
+#ifdef _WIN32
+      signal (SIGTERM, reload_config);
+#else
+    signal (SIGHUP, reload_config);
+#endif
+
 
   if (ut->use_telnet)
   {

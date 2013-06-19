@@ -25,7 +25,7 @@
 #include <upnp/upnptools.h>
 #ifdef _WIN32
 #else
-#include <stdbool.h>
+
 #endif
 #include <sys/types.h>
 

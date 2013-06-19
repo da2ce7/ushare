@@ -25,7 +25,10 @@
 #define CTRL_TELNET_SHARED_BUFFER_SIZE 256
 #define CTRL_CLIENT_RECV_BUFFER_SIZE 256
 
+#ifdef _WIN32
+#else
 #include <netinet/in.h>
+#endif
 
 /**
  * @brief Structure doubling as both a connected client data holder

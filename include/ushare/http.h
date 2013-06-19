@@ -25,6 +25,11 @@
 #include <upnp/upnp.h>
 #include <upnp/upnptools.h>
 
-struct UpnpVirtualDirCallbacks virtual_dir_callbacks;
+VDCallback_GetInfo *callbackGetInfo;
+VDCallback_Open *callbackOpen;
+VDCallback_Read *callbackRead;
+VDCallback_Write *callbackWrite;
+VDCallback_Seek *callbackSeek;
+VDCallback_Close *callbackClose;
 
 #endif /* _HTTP_H_ */

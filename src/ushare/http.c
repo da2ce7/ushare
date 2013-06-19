@@ -27,7 +27,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+
 #include <errno.h>
 #include <string.h>
 
@@ -52,13 +52,16 @@
 struct web_file_t {
   char *fullpath;
   off_t pos;
-  enum {
-    FILE_LOCAL,
-    FILE_MEMORY
-  } type;
+  enum { FILE_LOCAL, FILE_MEMORY } type;
   union {
     struct {
+#ifdef _MSC_VER
+      FILE* fd;
+	  HANDLE fileMapping;
+	  __int64 fileSize;
+#else
       int fd;
+#endif
       struct upnp_entry_t *entry;
     } local;
     struct {
@@ -70,18 +73,18 @@ struct web_file_t {
 
 
 static _inline void
-set_info_file (struct File_Info *info, const off_t length,
+set_info_file (IN UpnpFileInfo *info, const off_t length,
                const char *content_type)
 {
-  info->file_length = length;
-  info->last_modified = 0;
-  info->is_directory = 0;
-  info->is_readable = 1;
-  info->content_type = ixmlCloneDOMString (content_type);
+  UpnpFileInfo_set_FileLength(info,length);
+  UpnpFileInfo_set_LastModified(info,0);
+  UpnpFileInfo_set_IsDirectory(info,0);
+  UpnpFileInfo_set_IsReadable(info,1);
+  UpnpFileInfo_set_ContentType(info,content_type);
 }
 
 static int
-http_get_info (const char *filename, struct File_Info *info)
+http_get_info (const char *filename, OUT UpnpFileInfo *info)
 {
   extern struct ushare_t *ut;
   struct upnp_entry_t *entry = NULL;
@@ -178,19 +181,21 @@ http_get_info (const char *filename, struct File_Info *info)
   if (stat (entry->fullpath, &st) < 0)
     return -1;
 
+#ifndef _MSC_VER
   if (access (entry->fullpath, R_OK) < 0)
   {
     if (errno != EACCES)
       return -1;
-    info->is_readable = 0;
+	UpnpFileInfo_set_IsReadable(info,0);
   }
   else
-    info->is_readable = 1;
+#endif
+    UpnpFileInfo_set_IsReadable(info,1);
 
   /* file exist and can be read */
-  info->file_length = st.st_size;
-  info->last_modified = st.st_mtime;
-  info->is_directory = S_ISDIR (st.st_mode);
+  UpnpFileInfo_set_FileLength(info,st.st_size);
+  UpnpFileInfo_set_LastModified(info,st.st_mtime);
+  UpnpFileInfo_set_IsDirectory(info,st.st_mode);
 
   protocol = 
 #ifdef HAVE_DLNA
@@ -211,11 +216,11 @@ http_get_info (const char *filename, struct File_Info *info)
 
   if (content_type)
   {
-    info->content_type = ixmlCloneDOMString (content_type);
+	  UpnpFileInfo_set_ContentType(info,ixmlCloneDOMString(content_type));
     free (content_type);
   }
   else
-    info->content_type = ixmlCloneDOMString ("");
+	  UpnpFileInfo_set_ContentType(info,ixmlCloneDOMString (""));
 
   return 0;
 }
@@ -227,10 +232,10 @@ get_file_memory (const char *fullpath, const char *description,
   struct web_file_t *file;
 
   file = malloc (sizeof (struct web_file_t));
-  file->fullpath = strdup (fullpath);
+  file->fullpath = _strdup (fullpath);
   file->pos = 0;
   file->type = FILE_MEMORY;
-  file->detail.memory.contents = strdup (description);
+  file->detail.memory.contents = _strdup (description);
   file->detail.memory.len = length;
 
   return ((UpnpWebFileHandle) file);
@@ -244,12 +249,19 @@ get_file_local (const char *fullpath)
 
   log_verbose ("Fullpath : %s\n", fullpath);
 
+#ifdef _WIN32
+  fd = _open (fullpath, O_RDONLY | O_RAW );
+  if (fd < 0)
+    return NULL;
+#else
+
   fd = open (fullpath, O_RDONLY | O_NONBLOCK | O_SYNC | O_NDELAY);
   if (fd < 0)
     return NULL;
+#endif
 
   file = malloc (sizeof (struct web_file_t));
-  file->fullpath = strdup (fullpath);
+  file->fullpath = _strdup (fullpath);
   file->pos = 0;
   file->type = FILE_LOCAL;
   file->detail.local.entry = NULL;
@@ -310,12 +322,18 @@ http_open (const char *filename, enum UpnpOpenFileMode mode)
 
   log_verbose ("Fullpath : %s\n", entry->fullpath);
 
+#ifdef _WIN32
+    fd = _open (entry->fullpath, O_RDONLY | O_RAW );
+  if (fd < 0)
+    return NULL;
+#else
   fd = open (entry->fullpath, O_RDONLY | O_NONBLOCK | O_SYNC | O_NDELAY);
   if (fd < 0)
     return NULL;
+#endif
 
   file = malloc (sizeof (struct web_file_t));
-  file->fullpath = strdup (entry->fullpath);
+  file->fullpath = _strdup (entry->fullpath);
   file->pos = 0;
   file->type = FILE_LOCAL;
   file->detail.local.entry = entry;
@@ -339,7 +357,7 @@ http_read (UpnpWebFileHandle fh, char *buf, size_t buflen)
   {
   case FILE_LOCAL:
     log_verbose ("Read local file.\n");
-    len = read (file->detail.local.fd, buf, buflen);
+    len = _read (file->detail.local.fd, buf, buflen);
     break;
   case FILE_MEMORY:
     log_verbose ("Read file from memory.\n");
@@ -359,10 +377,17 @@ http_read (UpnpWebFileHandle fh, char *buf, size_t buflen)
   return len;
 }
 
+#ifdef _WIN32
+static int
+http_write (UpnpWebFileHandle fh,
+            char *buf,
+            size_t buflen)
+#else
 static int
 http_write (UpnpWebFileHandle fh __attribute__((unused)),
             char *buf __attribute__((unused)),
             size_t buflen __attribute__((unused)))
+#endif
 {
   log_verbose ("http write\n");
 
@@ -424,7 +449,7 @@ http_seek (UpnpWebFileHandle fh, off_t offset, int origin)
 
     /* Don't seek with origin as specified above, as file may have
        changed in size since our last stat. */
-    if (lseek (file->detail.local.fd, newpos, SEEK_SET) == -1)
+    if (_lseek (file->detail.local.fd, newpos, SEEK_SET) == -1)
     {
       log_verbose ("%s: cannot seek: %s\n", file->fullpath, strerror (errno));
       return -1;
@@ -457,7 +482,7 @@ http_close (UpnpWebFileHandle fh)
   switch (file->type)
   {
   case FILE_LOCAL:
-    close (file->detail.local.fd);
+    _close (file->detail.local.fd);
     break;
   case FILE_MEMORY:
     /* no close operation */
@@ -476,11 +501,11 @@ http_close (UpnpWebFileHandle fh)
   return 0;
 }
 
-struct UpnpVirtualDirCallbacks virtual_dir_callbacks = {
-  http_get_info,
-  http_open,
-  http_read,
-  http_write,
-  http_seek,
-  http_close
-};
+//struct VirtualDirCallbacks virtual_dir_callbacks = {
+//  http_get_info,
+//  http_open,
+//  http_read,
+//  http_write,
+//  http_seek,
+//  http_close
+//};

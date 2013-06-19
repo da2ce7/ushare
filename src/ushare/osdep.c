@@ -129,6 +129,71 @@ int getopt_long (int argc, char *const *argv, const char *shortopts,
 osip_list_t dir_file_list;
 int dir_file_count = 0;
 
+int scandir(const char *dirname, struct dirent ***namelist,
+      int (*filter)(const struct dirent *),
+      int (*compar)(const struct dirent **, const struct dirent **))
+{
+  struct dirent *result = 0;
+   struct dirent **namlist;
+  int namelistlen = 0;
+  int num_enrties= 0;
+
+  DIR *dir = opendir(dirname);
+
+  if (NULL == dir)
+  {
+    return -1;
+  }
+
+  // count number of enrties
+    while(readdir (dir) != NULL)
+    {
+      num_enrties++;
+    }
+
+
+  rewinddir(dir);
+
+  namlist = (struct dirent **) malloc(num_enrties * sizeof(struct dirent *));
+
+  if (0 == namlist) // empty dir
+  {
+    closedir(dir);
+    return namelistlen;
+  }
+
+  if(NULL != dir)
+  {
+    while(readdir (dir) != NULL)
+    {
+		result = (struct dirent *) malloc(sizeof(struct dirent) + strlen(dir->ent.d_name) + 1);
+      strcpy(result->d_name, dir->ent.d_name);
+      if (filter)
+      {
+        if (filter(result))
+        {
+          namlist[namelistlen] = result;
+          namelistlen++;
+        }
+      }
+      else
+      {
+        namlist[namelistlen] = result;
+        namelistlen++;
+      }
+    }
+  }
+
+  //qdirsort(namlist, namelistlen, compar); //todo
+
+  *namelist = namlist;
+
+  closedir(dir);
+
+  return namelistlen;
+}
+
+/*
 int scandir_tolist1(char* container_dir, osip_list_t* list)
 {
 	WIN32_FIND_DATAA FindFileData;
@@ -161,6 +226,7 @@ int scandir_tolist1(char* container_dir, osip_list_t* list)
 			dirent* ent = (dirent*)malloc(sizeof(dirent));
 			osip_list_add(list, ent, -1);
 
+			ent->
 			
 			ent->mode = 1;
 			ent->fullpath = (char*)malloc(strlen(dir_name) + 2);
@@ -276,14 +342,12 @@ int scandir_tolist1(char* container_dir, osip_list_t* list)
 		FindClose(hFind);
 		if (dwError != ERROR_NO_MORE_FILES) 
 		{
-			OutputDebugString(L"Error\n ");
+			OutputDebugStringW(L"Error\n ");
 			return 0;
 		}
 	}
 	return count;	
 }
-
-
 int scandir_tolist2(char* container_dir)
 
 {
@@ -407,6 +471,7 @@ int scandir_tolist2(char* container_dir)
 	}
 	return count;
 }
+*/
 
 void cleardir_inlist(osip_list_t* list)
 {
@@ -414,19 +479,17 @@ void cleardir_inlist(osip_list_t* list)
 	{
 		dirent* ent = (dirent*)osip_list_get(list, 0);
 		osip_list_remove (list, 0);
-		if(ent->mode == 0)
+		if(ent->d_ino == 0)
 		{
-			OutputDebugString(L"Directory, name is : ");
+			OutputDebugStringW(L"Directory, name is : ");
 		}
 		else
 		{
-			OutputDebugString(L"File, name is : ");
+			OutputDebugStringW(L"File, name is : ");
 		}
- 		OutputDebugStringA(ent->filename);
-		OutputDebugString(L"\n");
-		free(ent->filepathname);
-		free(ent->filename);
-		free(ent->fullpath);
+		OutputDebugStringA(ent->d_name);
+		OutputDebugStringW(L"\n");
+		free(ent->d_name);
 		free(ent);
      }
 }

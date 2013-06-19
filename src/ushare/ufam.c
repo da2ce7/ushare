@@ -28,7 +28,7 @@
 #include <fam.h>
 #include <sys/select.h>
 #include <pthread.h>
-#include <stdbool.h>
+
 
 #include "ushare.h"
 #include "metadata.h"

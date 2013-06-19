@@ -23,8 +23,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <getopt.h>
-#include <stdbool.h>
+
+
 #include <limits.h>
 
 #include "ushare_config.h"
@@ -91,7 +91,7 @@ ushare_set_name (struct ushare_t *ut, const char *name)
     ut->name = NULL;
   }
 
-  ut->name = strdup_trim (name);
+  ut->name = _strdup(name);
 }
 
 static void
@@ -106,7 +106,7 @@ ushare_set_interface (struct ushare_t *ut, const char *iface)
     ut->interface = NULL;
   }
 
-  ut->interface = strdup_trim (iface);
+  ut->interface = _strdup(iface);
 }
 
 static void
@@ -124,7 +124,7 @@ ushare_set_cfg_file (struct ushare_t *ut, const char *file)
   if (!ut || !file)
     return;
 
-  ut->cfg_file = strdup (file);
+  ut->cfg_file = _strdup (file);
 }
 
 static void
@@ -136,7 +136,7 @@ ushare_set_dir (struct ushare_t *ut, const char *dirlist)
   if (!ut || !dirlist)
     return;
 
-  x = strdup_trim (dirlist);
+  x = _strdup(dirlist);
   if (x)
   {
     m_buffer = (char*) malloc (strlen (x) * sizeof (char));

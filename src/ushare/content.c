@@ -44,7 +44,7 @@ content_add(content_list *list, const char *item)
       perror ("error realloc");
       exit (2);
     }
-    list->content[list->count-1] = strdup (item);
+    list->content[list->count-1] = _strdup (item);
   }
   return list;
 }

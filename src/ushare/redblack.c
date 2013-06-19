@@ -28,7 +28,7 @@ static char rcsid[]="$Id: redblack.c,v 1.9 2003/10/24 01:31:21 damo Exp $";
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <unistd.h>
+
 #include "redblack.h"
 
 #define assert(expr)

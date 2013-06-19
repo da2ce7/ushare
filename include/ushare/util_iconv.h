@@ -23,8 +23,12 @@
 
 void setup_iconv (void);
 void finish_iconv (void);
+#ifdef _MSC_VER
+char *iconv_convert (const char *inbuf);
+#else
 char *iconv_convert (const char *inbuf)
     __attribute__ ((malloc, nonnull, format_arg (1)));
+#endif
 
 #define UTF8 "UTF-8"
 

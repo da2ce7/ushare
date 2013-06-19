@@ -143,5 +143,5 @@ char *mime_get_protocol (struct mime_type_t *mime)
 
   strcpy (protocol, mime->mime_protocol);
   strcat (protocol, "*");
-  return strdup (protocol);
+  return _strdup (protocol);
 }

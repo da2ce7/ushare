@@ -22,8 +22,12 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+
+#ifdef _WIN32
+#else
 #include <syslog.h>
-#include <stdbool.h>
+#endif
+
 
 #include "ushare_config.h"
 #include "trace.h"
@@ -31,6 +35,67 @@
 
 extern struct ushare_t *ut;
 
+#ifdef _MSC_VER
+
+void
+print_log (log_level level, const char *format, va_list args)
+{
+	int is_daemon = ut ? ut->daemon : 0;
+	int is_verbose = ut ? ut->verbose : 0;
+	FILE *output = NULL;
+	if (!format)
+		return;
+	
+	if (!is_verbose && level >= ULOG_VERBOSE)
+		return;
+	
+		output = level == ULOG_ERROR ? stderr : stdout;
+		vfprintf (output, format, args);
+}
+
+void
+start_log (void)
+{
+
+}
+
+void log_info(const char *fmt,...)
+{
+/*	va_list va;
+	if (!fmt)
+		return;
+	
+	va_start (va, fmt);
+	print_log (ULOG_NORMAL, fmt, va);
+	va_end(va);
+	*/
+}
+
+void log_error(const char *fmt,...)
+{
+/*	va_list va;
+	if (!fmt)
+		return;
+	
+	va_start (va, fmt);
+	print_log (ULOG_ERROR, fmt, va);
+	va_end(va);
+	*/
+}
+
+void log_verbose(const char *fmt,...)
+{
+/*	va_list va;
+	if (!fmt)
+		return;
+	
+	va_start (va, fmt);
+	print_log (ULOG_VERBOSE, fmt, va);
+	va_end(va);
+	*/
+}
+
+#else
 void
 print_log (log_level level, const char *format, ...)
 {
@@ -59,8 +124,9 @@ print_log (log_level level, const char *format, ...)
   va_end (va);
 }
 
-_inline void
+inline void
 start_log (void)
 {
   openlog (PACKAGE_NAME, LOG_PID, LOG_DAEMON);
 }
+#endif

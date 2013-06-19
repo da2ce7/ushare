@@ -189,7 +189,7 @@ filter_has_val (const char *filter, const char *val)
   if (!strcmp (filter, "*"))
     return true;
 
-  x = strdup (filter);
+  x = _strdup (filter);
   if (x)
   {
     m_buffer = (char*) malloc (strlen (x));

@@ -20,6 +20,12 @@
 #include <stdarg.h>
 #include <errno.h>
 
+#ifdef _WIN32
+#include <dirent_win.h>
+#else
+#include <dirent.h>
+#endif
+
 #include <ushare_config.h>
 
 #include <osdep.h>

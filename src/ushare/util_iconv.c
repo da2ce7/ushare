@@ -91,7 +91,7 @@ iconv_convert (const char *input)
 
   /* conversion not necessary. save our time. */
   if (!cd)
-    return strdup (input);
+    return _strdup (input);
 
   /* Determine the length we need. */
   iconv (cd, NULL, NULL, NULL, &dummy);
@@ -167,6 +167,6 @@ iconv_convert (const char *input)
 
   return result;
 #else
-  return strdup (input);
+  return _strdup (input);
 #endif
 }

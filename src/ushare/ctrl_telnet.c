@@ -31,12 +31,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include <time.h>
+#else
 #include <sys/select.h> /* For select */
 #include <sys/time.h>
-#include <unistd.h> /* For pipe */
+#endif
+
+ /* For pipe */
 #include <sys/types.h>
+#ifdef _WIN32
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
+#endif
 #include <pthread.h>
 #include <stdarg.h>
 
@@ -45,6 +53,9 @@
 #define pthread_mutex_unlock(x) printf("<<<< Unlocking " __FILE__ ":" STR(__LINE__) " \t" #x "\n");
 #endif
 
+#ifndef MSG_DONTWAIT
+#define MSG_DONTWAIT 0
+#endif
 /**
  * @brief Structure holding data between the staring rutine and the thread
  */
@@ -213,7 +224,7 @@ ctrl_telnet_stop (void)
   }
 
   /* yes is int, which is bigger then char, so this should be safe */
-  write (ttd.killer[1], &yes, sizeof (char));
+  _write (ttd.killer[1], &yes, sizeof (char));
 
   pthread_mutex_unlock (&startstop_lock);
   pthread_join (ttd.thread, NULL);
@@ -222,8 +233,13 @@ ctrl_telnet_stop (void)
 /**
  * @brief Telnet thread function
  */
+#ifdef _MSC_VER
+static void *
+ctrl_telnet_thread (void *a)
+#else
 static void *
 ctrl_telnet_thread (void *a __attribute__ ((unused)))
+#endif
 {
   /* fd_set with readable clients */
   fd_set fd_readable;
@@ -251,9 +267,9 @@ ctrl_telnet_thread (void *a __attribute__ ((unused)))
       /* FIXME: TODO: Shut down sockets...  */
 
       /* Close listener and killer */
-      close (ttd.listener);
-      close (ttd.killer[0]);
-      close (ttd.killer[1]);
+      _close (ttd.listener);
+      _close (ttd.killer[0]);
+      _close (ttd.killer[1]);
 
       /* Check which fds that had anyhting to say... */
       client = ttd.clients;
@@ -394,7 +410,7 @@ ctrl_telnet_client_remove (ctrl_telnet_client *client)
     }
   }
 
-  close (client->socket);
+  _close (client->socket);
 
   free (client);
 }
@@ -445,7 +461,7 @@ ctrl_telnet_client_recv (ctrl_telnet_client *client)
                  buffer_free, 0);
   if (nbytes <= 0)
   {
-    close (client->socket);
+    _close (client->socket);
     return nbytes;
   }
 
@@ -591,7 +607,7 @@ ctrl_telnet_client_execute_line (ctrl_telnet_client *client, char *line)
   int argc = 0;
   char **argv = NULL;
   telnet_function_list *node;
-  char *line2 = strdup (line); /* To make it safer */
+  char *line2 = _strdup (line); /* To make it safer */
   ctrl_telnet_tokenize (line2, &argc, &argv);
 
   node = functions;
@@ -631,8 +647,8 @@ ctrl_telnet_register (const char *funcname,
   telnet_function_list *function;
 
   function = malloc (sizeof (telnet_function_list));
-  function->name = strdup (funcname); /* Mayby use strndup...? */
-  function->description = description ? strdup (description) : NULL;
+  function->name = _strdup (funcname); /* Mayby use strndup...? */
+  function->description = description ? _strdup (description) : NULL;
   function->function = funcptr;
 
   pthread_mutex_lock (&functions_lock);
@@ -641,7 +657,7 @@ ctrl_telnet_register (const char *funcname,
   pthread_mutex_unlock (&functions_lock);
 }
 
-/* Warning: This WILL edit the input string... use strdup or something
+/* Warning: This WILL edit the input string... use _strdup or something
    if needed, also remember to free() argv as the first array is dynamic */
 /* If *argv != NULL it'll first be free()ed... or realloc,
    make sure to clear *argv to null on initialization */
@@ -847,10 +863,17 @@ help (ctrl_telnet_client *client, int argc, char **argv)
   }
 }
 
+#ifdef _MSC_VER
+static void
+banner (ctrl_telnet_client *client,
+        int argc,
+        char **argv)
+#else
 static void
 banner (ctrl_telnet_client *client,
         int argc __attribute__ ((unused)),
         char **argv __attribute__ ((unused)))
+#endif
 {
   ctrl_telnet_client_sendf (client, "%s (%s) (Built %s)\n",
                             PACKAGE_NAME, VERSION, __DATE__);
@@ -877,10 +900,17 @@ echod (ctrl_telnet_client *client, int argc, char **argv)
     ctrl_telnet_client_sendf (client, "%i: '%s'\n", i, argv[i]);
 }
 
+#ifdef _MSC_VER
+static void
+ctrl_telnet_exit (ctrl_telnet_client *client,
+                  int argc,
+                  char **argv)
+#else
 static void
 ctrl_telnet_exit (ctrl_telnet_client *client,
                   int argc __attribute__ ((unused)),
                   char **argv __attribute__ ((unused)))
+#endif
 {
   client->exiting = 1;
   ctrl_telnet_client_send (client, "Bye bye\n");

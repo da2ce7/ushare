@@ -25,7 +25,7 @@
 
 #include <fam.h>
 #include <pthread.h>
-#include <stdbool.h>
+
 
 #include "ushare.h"
 #include "metadata.h"
