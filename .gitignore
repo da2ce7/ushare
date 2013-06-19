@@ -49,3 +49,6 @@ include/semaphore.h
 pthreads/
 ffmpeg-Win32/
 ffmpeg-x64/
+
+IUpnpErrFile.txt
+IUpnpInfoFile.txt

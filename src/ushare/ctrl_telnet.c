@@ -184,7 +184,7 @@ ctrl_telnet_start (int port)
     return -1;
   }
 
-  print_log (ULOG_NORMAL, "Listening on telnet port %u\n", port);
+  log_info("Listening on telnet port %u\n", port);
 
   /* Create killer pipes */
 #ifdef _WIN32

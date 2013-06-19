@@ -28,57 +28,60 @@ typedef enum {
 } log_level;
 
 #ifdef _MSC_VER
-void print_log (log_level level, const char *format, va_list args);
+void print_log (log_level level, const char *fmt, va_list * pvl);
+#else
+void print_log (log_level level, const char *format, ...)
+  __attribute__ ((format (printf, 2, 3)));
+#endif
 
 
 void start_log (void);
 
 /* log_info
-* Normal print, to replace printf
-*/
-
-void log_info(const char *fmt,...);
-
-
-
-/* log_error
-* Error messages, output to stderr
-*/
-void log_error(const char* fmt, ...);
-
-
-/* log_verbose
-* Output only in verbose mode
-*/
-void log_verbose(const char* fmt, ...);
-
-#else
-
-void print_log (log_level level, const char *format, ...)
-  __attribute__ ((format (printf, 2, 3)));
-
-
-inline void start_log (void);
-
-/* log_info
  * Normal print, to replace printf
  */
+#ifdef _WIN32
+__inline void log_info(const char *fmt,...) {
+	va_list vl;
+    va_start(vl, fmt);
+	print_log (ULOG_NORMAL,fmt,&vl);
+    va_end(vl);
+}
+#else 
 #define log_info(s, str...) {          \
   print_log (ULOG_NORMAL, (s), ##str); \
   }
+#endif
 
 /* log_error
  * Error messages, output to stderr
  */
+#ifdef _WIN32
+__inline void log_error(const char *fmt,...) {
+	va_list vl;
+    va_start(vl, fmt);
+	print_log (ULOG_ERROR,fmt,&vl);
+	va_end(vl);
+}
+#else 
 #define log_error(s, str...) {        \
   print_log (ULOG_ERROR, (s), ##str); \
   }
+#endif
 
 /* log_verbose
  * Output only in verbose mode
  */
+#ifdef _WIN32
+__inline void log_verbose(const char *fmt,...) {
+	va_list vl;
+    va_start(vl, fmt);
+	print_log (ULOG_NORMAL,fmt,&vl);
+	va_end(vl);
+}
+#else 
 #define log_verbose(s, str...) {        \
-  print_log (ULOG_VERBOSE, (s), ##str); \
+  print_log (ULOG_NORMAL, (s), ##str); \
   }
 #endif
 

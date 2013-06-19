@@ -35,10 +35,85 @@
 
 extern struct ushare_t *ut;
 
+
+// copy form Open-Transactions
+#ifdef _WIN32
+void print_log (log_level level, const char *fmt, va_list * pvl)
+{
+	{
+		if(NULL == fmt) return;
+		if(NULL == pvl) return;
+	}
+	// ------------------
+	{
+		int size=0;
+		int nsize=0;
+		char * buffer = NULL;
+		va_list args = NULL;
+
+		va_list args_2 = *pvl;  //windows only.
+
+		args = *pvl;
+		size = _vscprintf(fmt,args) + 1;
+
+		// ------------------------------------    
+		buffer = (char*)malloc(size+100);
+		memset(buffer,'\0',size+100);
+		if(NULL == buffer) return;
+
+		nsize = vsnprintf_s(buffer,size,size,fmt,args_2);
+
+		if(0 > nsize) return;
+
+		if (size <= nsize) 
+		{
+			size  = nsize+1;
+			free(buffer); buffer = NULL;
+			buffer = (char*)malloc(size+100);
+			memset(buffer,'\0',size+100);
+
+			if(NULL == buffer) return;
+			memset(buffer,'\0', size+100);
+
+			nsize = vsnprintf_s(buffer,size,size,fmt,*pvl);
+			va_end(args);
+			va_end(args_2);
+
+			// ------------------------------------
+		if(0 > nsize) return;
+		}
+		if(nsize >= size) return;
+		// ------------------------------------
+		{
+			FILE *output = level == ULOG_ERROR ? stderr : stdout;
+			fprintf_s(output,buffer);
+		}
+		free(buffer); buffer = NULL;
+		return;
+	}
+}
+
+
+#else
 void
 print_log (log_level level, const char *format, ...)
 {
-  va_list va;
+	if(NULL != format) return;
+
+    // ------------------
+	int size=0;
+	int nsize=0;
+	char * buffer = NULL;
+	va_list args;
+
+#ifdef _WIN32
+	va_list args_2 = *pvl;  //windows only.
+
+	args = *pvl;
+	size = _vscprintf(fmt,args) + 1;
+#else
+#endif
+
   bool is_daemon = ut ? ut->daemon : false;
   bool is_verbose = ut ? ut->verbose : false;
 
@@ -48,7 +123,11 @@ print_log (log_level level, const char *format, ...)
   if (!is_verbose && level >= ULOG_VERBOSE)
     return;
 
+
   va_start (va, format);
+
+
+
   if (is_daemon || !_WIN32)
   {
 #ifndef _WIN32
@@ -60,13 +139,14 @@ print_log (log_level level, const char *format, ...)
   else
   {
     FILE *output = level == ULOG_ERROR ? stderr : stdout;
-    vfprintf (output, format, va);
+	if (NULL != va) vfprintf (output, format, va);
   }
   va_end (va);
 }
 
-__inline void
-start_log (void)
+#endif
+
+void start_log (void)
 {
 #ifdef _WIN32
 #else

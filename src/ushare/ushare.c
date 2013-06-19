@@ -373,17 +373,17 @@ init_upnp (struct ushare_t *ut)
   
   ut->port = UpnpGetServerPort();
   log_info (_("UPnP MediaServer listening on %s:%d\n"),
-            UpnpGetServerIpAddress (), ut->port);
+            UpnpGetServerIpAddress(), ut->port);
 
   UpnpEnableWebserver (TRUE);
 
   {
-	  UpnpVirtualDir_set_GetInfoCallback(*callbackGetInfo);
-	  UpnpVirtualDir_set_OpenCallback(*callbackOpen);
-	  UpnpVirtualDir_set_ReadCallback(*callbackRead);
-	  UpnpVirtualDir_set_WriteCallback(*callbackWrite);
-	  UpnpVirtualDir_set_SeekCallback(*callbackSeek);
-	  UpnpVirtualDir_set_CloseCallback(*callbackClose);
+	  //UpnpVirtualDir_set_GetInfoCallback(*callbackGetInfo);
+	  //UpnpVirtualDir_set_OpenCallback(*callbackOpen);
+	  //UpnpVirtualDir_set_ReadCallback(*callbackRead);
+	  //UpnpVirtualDir_set_WriteCallback(*callbackWrite);
+	  //UpnpVirtualDir_set_SeekCallback(*callbackSeek);
+	  //UpnpVirtualDir_set_CloseCallback(*callbackClose);
   }
 
   if (res != UPNP_E_SUCCESS)
