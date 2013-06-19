@@ -888,11 +888,14 @@ main (int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+#ifdef _WIN32
+#else
   if (!has_iface (ut->interface))
   {
     ushare_free (ut);
     return EXIT_FAILURE;
   }
+#endif
 
   ut->udn = create_udn (ut->interface);
   if (!ut->udn)

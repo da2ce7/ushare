@@ -31,11 +31,18 @@
 
 #include "osdep.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 #ifdef _MSC_VER
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <Iphlpapi.h>
 #include <tchar.h>
+#include <Userenv.h>
+#endif
+#ifdef __cplusplus
+}
 #endif
 
 #if (defined(BSD) || defined(__FreeBSD__) || defined(__APPLE__) || defined(_MSC_VER))
@@ -575,3 +582,138 @@ int get_macaddr_by_ipaddr(const char* ipaddr, char* macaddr)
 
 #endif
 #endif /* (defined(BSD) || defined(__FreeBSD__) || defined(__APPLE__)) */
+
+
+#ifdef _WIN32
+
+// inspired from http://ntcoder.com/bab/tag/expandenvironmentstringsforuser/
+LONG Windows_ExpandEnvironmentStrings    (wchar_t const  *const strEnvironmentStrings, wchar_t const **const out_ExpandedString)
+{
+	LPCWSTR strEnvStrCopy = NULL;
+	size_t lBuffSize2 = (MAX_PATH +1) * sizeof(wchar_t);
+
+	wchar_t * aHomeDirBuf = (wchar_t *)malloc(lBuffSize2);
+
+	{
+		LPWSTR  aEnvStrBuf = (LPWSTR)malloc(wcslen(strEnvironmentStrings));
+		wcscpy(aEnvStrBuf,strEnvironmentStrings); strEnvStrCopy = aEnvStrBuf;
+	}
+
+	if(NULL == strEnvStrCopy) return -1;
+
+	
+	{
+		// We need a process with query permission set
+		HANDLE hToken = 0;
+		if(!OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &hToken )) return false;
+
+		// Expand Environment Strings
+		if(!ExpandEnvironmentStringsForUserW(hToken,strEnvStrCopy,aHomeDirBuf,lBuffSize2)) return false;
+
+		// Close handle opened via OpenProcessToken
+		CloseHandle( hToken );
+	}
+	{
+		wchar_t const*const strHomeDir = aHomeDirBuf;
+		*out_ExpandedString = strHomeDir;
+	}
+
+	return true;
+}
+
+
+
+
+LONG Windows_GetInstallFolderFromRegistry(wchar_t const **const out_InstallFolderPath)
+{
+	HKEY hKey=0;
+	LONG lRes = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Open-Transactions", 0, KEY_READ, &hKey);
+	bool bExistsAndSuccess = (lRes == ERROR_SUCCESS);
+	bool bDoesNotExistsSpecifically = (lRes == ERROR_FILE_NOT_FOUND);
+
+	wchar_t const **const strValueOfBinDir = NULL;
+	LONG lRes2 = WindowsRegistryTools_GetStringRegKey(hKey, L"Path", L"bad", strValueOfBinDir);
+
+	if (bExistsAndSuccess)
+	{
+		*out_InstallFolderPath = *strValueOfBinDir;
+		return true;
+	}
+	return false;
+}
+
+LONG Windows_GetAppDataFolderFromRegistry(wchar_t const **const out_AppDataFolderPath)
+{
+	HKEY hKey=0;
+	LSTATUS lRes = RegOpenKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\\Windows\\\CurrentVersion\\Explorer\\User Shell Folders", 0, KEY_READ, &hKey);
+	BOOL bExistsAndSuccess = (lRes == ERROR_SUCCESS);
+	BOOL bDoesNotExistsSpecifically = (lRes == ERROR_FILE_NOT_FOUND);
+
+	wchar_t const *strValueOfAppDir = NULL;
+	WindowsRegistryTools_GetStringRegKey(hKey, L"AppData", L"bad", &strValueOfAppDir);
+
+	if (bExistsAndSuccess)
+	{
+		*out_AppDataFolderPath = strValueOfAppDir;
+		return true;
+	}
+	return false;
+}
+
+
+LONG WindowsRegistryTools_GetDWORDRegKey (HKEY hKey, wchar_t const *const strValueName, DWORD const nDefaultValue,   DWORD          *const out_nValue)
+{
+    DWORD dwBufferSize = (sizeof(DWORD));
+    DWORD nResult = (0);
+    LONG nError = RegQueryValueExW
+		(hKey,
+        strValueName,
+        0,
+        NULL,
+        (LPBYTE)(&nResult),
+        &dwBufferSize);
+
+	*out_nValue = nDefaultValue;
+    if (ERROR_SUCCESS == nError)
+    {
+        *out_nValue = nResult;
+    }
+    return nError;
+}
+
+
+LONG WindowsRegistryTools_GetBoolRegKey  (HKEY hKey, wchar_t const *const strValueName, bool    const bDefaultValue,   bool           *const out_bValue)
+{
+	const DWORD nDefValue = ((bDefaultValue) ? 1 : 0);
+    DWORD nResult = nDefValue;
+    LONG nError = WindowsRegistryTools_GetDWORDRegKey(hKey, strValueName, nDefValue, &nResult);
+
+	*out_bValue = bDefaultValue;
+    if (ERROR_SUCCESS == nError)
+    {
+		bool bResult = (nResult != 0) ? true : false;
+        *out_bValue = bResult;
+    }
+    return nError;
+}
+
+
+LONG WindowsRegistryTools_GetStringRegKey(HKEY hKey, wchar_t const *const strValueName, wchar_t const *const strDefaultValue, wchar_t const **const out_strValue)
+{
+    
+    WCHAR szBuffer[512];
+    DWORD dwBufferSize = sizeof(szBuffer);
+    ULONG nError = 0;
+    nError = RegQueryValueExW(hKey, strValueName, 0, NULL, (LPBYTE)szBuffer, &dwBufferSize);
+
+	*out_strValue = strDefaultValue;
+    if (ERROR_SUCCESS == nError)
+    {
+		wchar_t const*const strBuffer = szBuffer;
+        *out_strValue = strBuffer;
+    }
+    return nError;
+}
+
+#endif
+

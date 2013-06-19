@@ -34,7 +34,7 @@
 #define USHARE_ENABLE_XBOX        "USHARE_ENABLE_XBOX"
 #define USHARE_ENABLE_DLNA        "USHARE_ENABLE_DLNA"
 
-#define USHARE_CONFIG_FILE        "ushare.conf"
+#define USHARE_CONFIG_FILE        "ushare.cfg"
 #define DEFAULT_USHARE_NAME       "uShare"
 
 #if (defined(BSD) || defined(__FreeBSD__))

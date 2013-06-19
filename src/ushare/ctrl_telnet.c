@@ -188,7 +188,7 @@ ctrl_telnet_start (int port)
 
   /* Create killer pipes */
 #ifdef _WIN32
-  if (_pipe(ttd.killer,256, 0))
+  if (_pipe(ttd.killer,4028, 0))
 #else
   if (pipe (ttd.killer))
 #endif

@@ -55,11 +55,11 @@
 #define ICON_MIME_PNG          "image/png"
 #define ICON_MIME_JPEG         "image/jpeg"
 
-#define ICON_FILE_SM_PNG       DATADIR"sm.png"
-#define ICON_FILE_LRG_PNG      DATADIR"lrg.png"
+#define ICON_FILE_SM_PNG       USHARE_DATADIR"sm.png"
+#define ICON_FILE_LRG_PNG      USHARE_DATADIR"lrg.png"
 
-#define ICON_FILE_SM_JPEG      DATADIR"sm.jpeg"
-#define ICON_FILE_LRG_JPEG     DATADIR"lrg.jpeg"
+#define ICON_FILE_SM_JPEG      USHARE_DATADIR"sm.jpeg"
+#define ICON_FILE_LRG_JPEG     USHARE_DATADIR"lrg.jpeg"
 
 #define ICON_LOCATION_SM_PNG   "/web/sm.png"
 #define ICON_LOCATION_LRG_PNG  "/web/lrg.png"

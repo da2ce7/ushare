@@ -35,67 +35,6 @@
 
 extern struct ushare_t *ut;
 
-#ifdef _MSC_VER
-
-void
-print_log (log_level level, const char *format, va_list args)
-{
-	int is_daemon = ut ? ut->daemon : 0;
-	int is_verbose = ut ? ut->verbose : 0;
-	FILE *output = NULL;
-	if (!format)
-		return;
-	
-	if (!is_verbose && level >= ULOG_VERBOSE)
-		return;
-	
-		output = level == ULOG_ERROR ? stderr : stdout;
-		vfprintf (output, format, args);
-}
-
-void
-start_log (void)
-{
-
-}
-
-void log_info(const char *fmt,...)
-{
-/*	va_list va;
-	if (!fmt)
-		return;
-	
-	va_start (va, fmt);
-	print_log (ULOG_NORMAL, fmt, va);
-	va_end(va);
-	*/
-}
-
-void log_error(const char *fmt,...)
-{
-/*	va_list va;
-	if (!fmt)
-		return;
-	
-	va_start (va, fmt);
-	print_log (ULOG_ERROR, fmt, va);
-	va_end(va);
-	*/
-}
-
-void log_verbose(const char *fmt,...)
-{
-/*	va_list va;
-	if (!fmt)
-		return;
-	
-	va_start (va, fmt);
-	print_log (ULOG_VERBOSE, fmt, va);
-	va_end(va);
-	*/
-}
-
-#else
 void
 print_log (log_level level, const char *format, ...)
 {
@@ -110,11 +49,13 @@ print_log (log_level level, const char *format, ...)
     return;
 
   va_start (va, format);
-  if (is_daemon)
+  if (is_daemon || !_WIN32)
   {
+#ifndef _WIN32
     int flags = LOG_DAEMON;
     flags |= level == ULOG_ERROR ? LOG_ERR : LOG_NOTICE;
     vsyslog (flags, format, va);
+#endif
   }
   else
   {
@@ -124,9 +65,11 @@ print_log (log_level level, const char *format, ...)
   va_end (va);
 }
 
-inline void
+__inline void
 start_log (void)
 {
+#ifdef _WIN32
+#else
   openlog (PACKAGE_NAME, LOG_PID, LOG_DAEMON);
-}
 #endif
+}

@@ -128,31 +128,51 @@ ushare_set_cfg_file (struct ushare_t *ut, const char *file)
 }
 
 static void
-ushare_set_dir (struct ushare_t *ut, const char *dirlist)
+	ushare_set_dir (struct ushare_t *ut, const char *dirlist)
 {
-  char *x = NULL, *token = NULL;
-  char *m_buffer = NULL, *buffer;
+	if (!ut || !dirlist)
+		return;
+	{
+		char const * const x = _strdup(dirlist);
+		if (x)
+		{
+			size_t lx = (strlen(x));
+			char *  buffer = NULL;
+			char * m_buffer = (char*) malloc(lx * sizeof(char));
+			memset(m_buffer,'\0',lx); //clear the string.
+			buffer = m_buffer;
+			{
+				size_t length = lx -1; // no null terminating char.
+				size_t count = 0;
+				size_t pos = 0;
+				char charbuf = NULL;
+				char delchar = USHARE_DIR_DELIM[0];
 
-  if (!ut || !dirlist)
-    return;
 
-  x = _strdup(dirlist);
-  if (x)
-  {
-    m_buffer = (char*) malloc (strlen (x) * sizeof (char));
-    if (m_buffer)
-    {
-      buffer = m_buffer;
-      token = strtok_r (x, USHARE_DIR_DELIM, &buffer);
-      while (token)
-      {
-        ushare_add_contentdir (ut, token);
-        token = strtok_r (NULL, USHARE_DIR_DELIM, &buffer);
-      }
-      free (m_buffer);
-    }
-    free (x);
-  }
+				for(;;)
+				{
+					charbuf = x[count];
+					if (charbuf == delchar || count == length)
+					{
+						if (pos > 0) 
+						{
+							char const *const str = buffer;
+							char * strBuf = (char *) malloc(strlen(buffer) * sizeof(char));
+							strcpy(strBuf, str);
+							ushare_add_contentdir (ut, strBuf);
+						}
+						memset(buffer,'\0',length);
+						pos = 0;
+					}
+
+					buffer[pos++] = charbuf;
+
+					if (count++ == length) break;
+				}
+				free (buffer);
+			}
+		}
+	}
 }
 
 static void
@@ -273,20 +293,35 @@ int
 parse_config_file (struct ushare_t *ut)
 {
   char filename[PATH_MAX];
+  wchar_t wFilename[PATH_MAX];
   FILE *conffile;
   char *line = NULL;
   size_t size = 0;
   ssize_t read;
+  const wchar_t * wstrAppDataPath = NULL;
 
   if (!ut)
     return -1;
 
   if (!ut->cfg_file)
+  {
+#ifdef _WIN32
+
+	Windows_GetAppDataFolderFromRegistry(&wstrAppDataPath);
+	Windows_ExpandEnvironmentStrings(wstrAppDataPath,&wstrAppDataPath);
+  _snwprintf(wFilename,PATH_MAX,L"%s\\%hs\\%hs",wstrAppDataPath,SYSCONFDIR, USHARE_CONFIG_FILE);
+#else
     snprintf (filename, PATH_MAX, "%s/%s", SYSCONFDIR, USHARE_CONFIG_FILE); 
+#endif
+  }
   else
     snprintf (filename, PATH_MAX, "%s", ut->cfg_file);
 
+#ifdef _WIN32
+  conffile = _wfopen (wFilename, L"r");
+#else
   conffile = fopen (filename, "r");
+#endif
   if (!conffile)
     return -1;
 

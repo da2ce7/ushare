@@ -86,12 +86,16 @@ int strcasecmp( char *s1 ,char *s2);
 #define  PATH_MAX 512
 #endif
 
-#define SYSCONFDIR "C:\\"
+#define SYSCONFDIR "ushare"
 
 #define no_argument 0
 #define required_argument 1
 
 #endif
+
+
+
+
 
 
 #if (defined(BSD) || defined(__FreeBSD__))
@@ -135,6 +139,15 @@ int get_macaddr_by_ipaddr(const char* ipaddr, char* macaddr);
 
 
 #ifdef _WIN32
+// copy from OT (but I wrote em')
+
+LONG Windows_ExpandEnvironmentStrings    (wchar_t const  *const strEnvironmentStrings, wchar_t const **const out_ExpandedString);
+LONG Windows_GetInstallFolderFromRegistry(wchar_t const **const out_InstallFolderPath);
+LONG Windows_GetAppDataFolderFromRegistry(wchar_t const **const out_AppDataFolderPath);
+
+LONG WindowsRegistryTools_GetDWORDRegKey (HKEY hKey, wchar_t const *const strValueName, DWORD   const nDefaultValue,   DWORD          *const out_nValue);
+LONG WindowsRegistryTools_GetBoolRegKey  (HKEY hKey, wchar_t const *const strValueName, bool    const bDefaultValue,   bool           *const out_bValue);
+LONG WindowsRegistryTools_GetStringRegKey(HKEY hKey, wchar_t const *const strValueName, wchar_t const *const strDefaultValue, wchar_t const **const out_strValue);
 
 #endif
 
