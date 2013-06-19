@@ -46,3 +46,6 @@ include/dlna/
 include/pthread.h
 include/sched.h
 include/semaphore.h
+pthreads/
+ffmpeg-Win32/
+ffmpeg-x64/

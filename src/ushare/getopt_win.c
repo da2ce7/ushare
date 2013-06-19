@@ -34,11 +34,12 @@ PROFITS, BUSINESS INTERRUPTION, LOSS OF PROGRAMS OR OTHER DATA ON
 YOUR INFORMATION HANDLING SYSTEM OR OTHERWISE, EVEN If WE ARE
 EXPRESSLY ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 */
+#include <stdafx.h>
+
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdlib.h>
 #include <stdio.h>
 #include <malloc.h>
-#include "getopt_win.h"
 
 #ifdef __cplusplus
 	#define _GETOPT_THROW throw()

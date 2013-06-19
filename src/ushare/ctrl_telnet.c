@@ -187,7 +187,11 @@ ctrl_telnet_start (int port)
   print_log (ULOG_NORMAL, "Listening on telnet port %u\n", port);
 
   /* Create killer pipes */
+#ifdef _WIN32
+  if (_pipe(ttd.killer,256, 0))
+#else
   if (pipe (ttd.killer))
+#endif
   {
     perror ("Failed to create killer pipe");
     pthread_mutex_unlock (&startstop_lock);

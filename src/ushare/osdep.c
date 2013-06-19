@@ -119,12 +119,6 @@ int strcasecmp( char *s1 ,char *s2)
 
 char* optarg;
 
-int getopt_long (int argc, char *const *argv, const char *shortopts,
-				 const struct option *longopts, int *longind)
-{
-	return 0;
-}
-
 
 osip_list_t dir_file_list;
 int dir_file_count = 0;
