@@ -589,34 +589,37 @@ int get_macaddr_by_ipaddr(const char* ipaddr, char* macaddr)
 // inspired from http://ntcoder.com/bab/tag/expandenvironmentstringsforuser/
 LONG Windows_ExpandEnvironmentStrings    (wchar_t const  *const strEnvironmentStrings, wchar_t const **const out_ExpandedString)
 {
-	LPCWSTR strEnvStrCopy = NULL;
-	size_t lBuffSize2 = (MAX_PATH +1) * sizeof(wchar_t);
+	LPWSTR  aEnvStrBuf = (LPWSTR)malloc((wcslen(strEnvironmentStrings)+1) * sizeof(LPWSTR));
+	LPCWSTR strEnvStrCopy = wcscpy(aEnvStrBuf,strEnvironmentStrings);
 
-	wchar_t * aHomeDirBuf = (wchar_t *)malloc(lBuffSize2);
+	size_t lBuffSize2 = (MAX_PATH +1) * sizeof(LPWSTR);
+	LPWSTR aHomeDirBuf2 = (LPWSTR)malloc(lBuffSize2);;
 
-	{
-		LPWSTR  aEnvStrBuf = (LPWSTR)malloc(wcslen(strEnvironmentStrings));
-		wcscpy(aEnvStrBuf,strEnvironmentStrings); strEnvStrCopy = aEnvStrBuf;
-	}
 
 	if(NULL == strEnvStrCopy) return -1;
 
-	
 	{
-		// We need a process with query permission set
-		HANDLE hToken = 0;
-		if(!OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &hToken )) return false;
+		
 
-		// Expand Environment Strings
-		if(!ExpandEnvironmentStringsForUserW(hToken,strEnvStrCopy,aHomeDirBuf,lBuffSize2)) return false;
+		{
+			// We need a process with query permission set
+			HANDLE hToken = 0;
+			if(!OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &hToken )) return false;
 
-		// Close handle opened via OpenProcessToken
-		CloseHandle( hToken );
+			// Expand Environment Strings
+			if(!ExpandEnvironmentStringsForUserW(hToken,strEnvStrCopy,aHomeDirBuf2,lBuffSize2)) return false;
+
+			// Close handle opened via OpenProcessToken
+			CloseHandle( hToken );
+		}
+		{
+			LPWSTR  aExpStrBuf = (LPWSTR)malloc((wcslen(aHomeDirBuf2)+1) * sizeof(LPWSTR));
+			LPCWSTR strExpStrCopy = wcscpy(aExpStrBuf,aHomeDirBuf2); // make a copy
+			*out_ExpandedString = strExpStrCopy;
+		}
+		free (aHomeDirBuf2);
 	}
-	{
-		wchar_t const*const strHomeDir = aHomeDirBuf;
-		*out_ExpandedString = strHomeDir;
-	}
+	free(aEnvStrBuf); // cleanup copy.
 
 	return true;
 }
@@ -700,18 +703,24 @@ LONG WindowsRegistryTools_GetBoolRegKey  (HKEY hKey, wchar_t const *const strVal
 
 LONG WindowsRegistryTools_GetStringRegKey(HKEY hKey, wchar_t const *const strValueName, wchar_t const *const strDefaultValue, wchar_t const **const out_strValue)
 {
-    
-    WCHAR szBuffer[512];
-    DWORD dwBufferSize = sizeof(szBuffer);
+    size_t nBufSize = 512 * sizeof(LPBYTE);
+    LPBYTE szBuffer = (LPBYTE) malloc(nBufSize);
     ULONG nError = 0;
-    nError = RegQueryValueExW(hKey, strValueName, 0, NULL, (LPBYTE)szBuffer, &dwBufferSize);
+	DWORD dwBufSize = nBufSize;
+	memset(szBuffer,'/0',nBufSize);
+
+    nError = RegQueryValueExW(hKey, strValueName, 0, NULL, szBuffer, &dwBufSize);
 
 	*out_strValue = strDefaultValue;
     if (ERROR_SUCCESS == nError)
     {
-		wchar_t const*const strBuffer = szBuffer;
+		wchar_t const*const strBuffer = (wchar_t *)realloc(szBuffer,nBufSize);
         *out_strValue = strBuffer;
     }
+	else
+	{
+		free(szBuffer);
+	}
     return nError;
 }
 

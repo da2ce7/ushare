@@ -22,7 +22,7 @@
 #ifndef _USHARE_H_
 #define _USHARE_H_
 
-#include <upnp/upnp.h>
+ #include <upnp/upnp.h>
 #include <upnp/upnptools.h>
 #ifdef _WIN32
 #else

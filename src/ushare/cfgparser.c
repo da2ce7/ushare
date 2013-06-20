@@ -138,36 +138,39 @@ static void
 		{
 			size_t lx = (strlen(x));
 			char *  buffer = NULL;
-			char * m_buffer = (char*) malloc(lx * sizeof(char));
-			memset(m_buffer,'\0',lx); //clear the string.
+			char * m_buffer = (char*) malloc((lx +1) * sizeof(char));
+			memset(m_buffer,'\0',lx +1); //clear the string.
 			buffer = m_buffer;
 			{
-				size_t length = lx -1; // no null terminating char.
+				size_t length = lx; // no null terminating char.
 				size_t count = 0;
 				size_t pos = 0;
-				char charbuf = NULL;
+				char charbuf = 0;
 				char delchar = USHARE_DIR_DELIM[0];
 
 
 				for(;;)
 				{
 					charbuf = x[count];
-					if (charbuf == delchar || count == length)
+
+					// set the char to the buffer (if it isn't the delchar).
+					if (charbuf != delchar) buffer[pos++] = charbuf;
+
+					if (pos > 0)
 					{
-						if (pos > 0) 
+						if (charbuf == delchar || count == length)
 						{
-							char const *const str = buffer;
-							char * strBuf = (char *) malloc(strlen(buffer) * sizeof(char));
-							strcpy(strBuf, str);
+							char * strBuf = (char*)malloc((pos+1) * sizeof(char));
+							char const *const str = strcpy(strBuf, buffer);
+
 							ushare_add_contentdir (ut, strBuf);
+
+							memset(buffer,'\0',length+1);
+
+							pos = 0; // reset the position.
 						}
-						memset(buffer,'\0',length);
-						pos = 0;
 					}
-
-					buffer[pos++] = charbuf;
-
-					if (count++ == length) break;
+					if (count++ == length) break; 
 				}
 				free (buffer);
 			}

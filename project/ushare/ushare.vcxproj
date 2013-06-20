@@ -69,6 +69,20 @@
     <ClCompile Include="..\..\src\ushare\ushare.c" />
     <ClCompile Include="..\..\src\ushare\util_iconv.c" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\libdlna\project\dlna\dlna.vcxproj">
+      <Project>{613f3453-d22e-4c5c-a581-a37f0859f13c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\pupnp\project\ixml\ixml.vcxproj">
+      <Project>{8316d07e-6da7-409b-b064-6d9fe099a79b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\pupnp\project\threadutil\threadutil.vcxproj">
+      <Project>{a43ca2a8-3864-4282-8c86-efefae0e0e4d}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\pupnp\project\upnp\upnp.vcxproj">
+      <Project>{a37d36ab-6e70-4f55-a9ac-b3d5166e3919}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{CD35AB53-AB88-48A3-B109-6A4CA4415122}</ProjectGuid>
     <RootNamespace>ushare</RootNamespace>
@@ -115,26 +129,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)..\lib\$(PlatformName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\obj\$(PlatformName)\$(Configuration)\$(ProjectName)\</IntDir>
-    <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\$(ProjectName);$(SolutionDir)..\include\build;$(SolutionDir)..\include\upnp;$(SolutionDir)..\include\ixml;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\lib\$(PlatformName)\$(Configuration)\;$(SolutionDir)..\ffmpeg-$(PlatformName)\lib;$(SolutionDir)..\pthreads\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)..\include;$(ProjectDir)..\..\include\$(ProjectName);$(SolutionDir)..\pthreads\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\lib\$(PlatformName)\$(Configuration)\;$(SolutionDir)..\pthreads\lib\$(PlatformTarget)\;$(SolutionDir)..\ffmpeg-$(PlatformName)\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)..\lib\$(PlatformName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\obj\$(PlatformName)\$(Configuration)\$(ProjectName)\</IntDir>
-    <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\$(ProjectName);$(SolutionDir)..\include\build;$(SolutionDir)..\include\upnp;$(SolutionDir)..\include\ixml;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\lib\$(PlatformName)\$(Configuration)\;$(SolutionDir)..\ffmpeg-$(PlatformName)\lib;$(SolutionDir)..\pthreads\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)..\include;$(ProjectDir)..\..\include\$(ProjectName);$(SolutionDir)..\pthreads\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\lib\$(PlatformName)\$(Configuration)\;$(SolutionDir)..\pthreads\lib\$(PlatformTarget)\;$(SolutionDir)..\ffmpeg-$(PlatformName)\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)..\lib\$(PlatformName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\obj\$(PlatformName)\$(Configuration)\$(ProjectName)\</IntDir>
-    <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\$(ProjectName);$(SolutionDir)..\include\build;$(SolutionDir)..\include\upnp;$(SolutionDir)..\include\ixml;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\lib\$(PlatformName)\$(Configuration)\;$(SolutionDir)..\ffmpeg-$(PlatformName)\lib;$(SolutionDir)..\pthreads\lib\x64\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)..\include;$(ProjectDir)..\..\include\$(ProjectName);$(SolutionDir)..\pthreads\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\lib\$(PlatformName)\$(Configuration)\;$(SolutionDir)..\pthreads\lib\$(PlatformTarget)\;$(SolutionDir)..\ffmpeg-$(PlatformName)\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)..\lib\$(PlatformName)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\obj\$(PlatformName)\$(Configuration)\$(ProjectName)\</IntDir>
-    <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\$(ProjectName);$(SolutionDir)..\include\build;$(SolutionDir)..\include\upnp;$(SolutionDir)..\include\ixml;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\lib\$(PlatformName)\$(Configuration)\;$(SolutionDir)..\ffmpeg-$(PlatformName)\lib;$(SolutionDir)..\pthreads\lib\x64\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)..\include;$(ProjectDir)..\..\include\$(ProjectName);$(SolutionDir)..\pthreads\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\lib\$(PlatformName)\$(Configuration)\;$(SolutionDir)..\pthreads\lib\$(PlatformTarget)\;$(SolutionDir)..\ffmpeg-$(PlatformName)\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
