@@ -242,6 +242,8 @@ handle_action_request (IN UpnpActionRequest *request)
       event.status = true;
       event.service = service;
 
+	  UpnpActionRequest_set_ActionResult(request, NULL); // clean up any old responces
+
 	  if (action->function (&event) && event.status) UpnpActionRequest_set_ErrCode(request,UPNP_E_SUCCESS);
 
       if (ut->verbose)

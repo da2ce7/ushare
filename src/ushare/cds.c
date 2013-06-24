@@ -220,9 +220,8 @@ static bool
 	cds_get_search_capabilities (struct action_event_t *event)
 {
 	{
-		IXML_Document *actionResult = NULL;
-		UpnpActionRequest_set_ActionResult(event->request, actionResult);
-
+		IXML_Document *actionResult = UpnpActionRequest_get_ActionResult(event->request);
+		
 		upnp_add_response (&actionResult, event, SERVICE_CDS_ARG_SEARCH_CAPS, "");
 
 		UpnpActionRequest_set_ActionResult(event->request, actionResult);
@@ -235,8 +234,7 @@ static bool
 	cds_get_sort_capabilities (struct action_event_t *event)
 {
 	{
-		IXML_Document *actionResult = NULL;
-		UpnpActionRequest_set_ActionResult(event->request, actionResult);
+		IXML_Document *actionResult = UpnpActionRequest_get_ActionResult(event->request);
 
 		upnp_add_response (&actionResult, event, SERVICE_CDS_ARG_SORT_CAPS, "");
 
@@ -250,8 +248,7 @@ static bool
 	cds_get_system_update_id (struct action_event_t *event)
 {
 	{
-		IXML_Document *actionResult = NULL;
-		UpnpActionRequest_set_ActionResult(event->request, actionResult);
+		IXML_Document *actionResult = UpnpActionRequest_get_ActionResult(event->request);
 
 		upnp_add_response (&actionResult, event, SERVICE_CDS_ARG_UPDATE_ID,
 			SERVICE_CDS_ROOT_OBJECT_ID);
@@ -291,7 +288,7 @@ static void
 static void
 	didl_add_value (struct buffer_t *out, char *param, off_t value)
 {
-	buffer_appendf (out, " %s=\"%jd\"", param, value);
+	buffer_appendf (out, " %s=\"%ld\"", param, value);
 }
 
 static void
@@ -427,8 +424,7 @@ static int
 	}
 
 	{
-		IXML_Document *actionResult = NULL;
-		UpnpActionRequest_set_ActionResult(event->request, actionResult);
+		IXML_Document *actionResult = UpnpActionRequest_get_ActionResult(event->request);
 
 		upnp_add_response (&actionResult, event, SERVICE_CDS_DIDL_RESULT, out->buf);
 		upnp_add_response (&actionResult, event, SERVICE_CDS_DIDL_NUM_RETURNED, "1");
@@ -518,8 +514,7 @@ struct buffer_t *out, int index,
 	didl_add_footer (out);
 
 	{
-		IXML_Document *actionResult = NULL;
-		UpnpActionRequest_set_ActionResult(event->request, actionResult);
+		IXML_Document *actionResult = UpnpActionRequest_get_ActionResult(event->request);
 
 		upnp_add_response (&actionResult, event, SERVICE_CDS_DIDL_RESULT, out->buf);
 		sprintf (tmp, "%d", result_count);
@@ -619,8 +614,7 @@ static bool
 	buffer_free (out);
 
 	{
-		IXML_Document *actionResult = NULL;
-		UpnpActionRequest_set_ActionResult(event->request, actionResult);
+		IXML_Document *actionResult = UpnpActionRequest_get_ActionResult(event->request);
 
 		upnp_add_response (&actionResult, event, SERVICE_CDS_DIDL_UPDATE_ID,
 			SERVICE_CDS_ROOT_OBJECT_ID);
@@ -856,8 +850,7 @@ struct buffer_t *out, int index,
 	didl_add_footer (out);
 
 	{
-		IXML_Document *actionResult = NULL;
-		UpnpActionRequest_set_ActionResult(event->request, actionResult);
+		IXML_Document *actionResult = UpnpActionRequest_get_ActionResult(event->request);
 
 		upnp_add_response (&actionResult, event, SERVICE_CDS_DIDL_RESULT, out->buf);
 
@@ -931,8 +924,7 @@ static bool
 	buffer_free (out);
 
 	{
-		IXML_Document *actionResult = NULL;
-		UpnpActionRequest_set_ActionResult(event->request, actionResult);
+		IXML_Document *actionResult = UpnpActionRequest_get_ActionResult(event->request);
 
 		upnp_add_response (&actionResult, event, SERVICE_CDS_DIDL_UPDATE_ID,
 			SERVICE_CDS_ROOT_OBJECT_ID);

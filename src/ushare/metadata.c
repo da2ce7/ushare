@@ -665,14 +665,42 @@ build_metadata_list (struct ushare_t *ut)
     struct upnp_entry_t *entry = NULL;
     char *title = NULL;
     int size = 0;
+	char * strContent = NULL;
+
+	// trim the string
+	{
+		char const * const szContent = ut->contentlist->content[i];
+		size_t lencontent = (strlen(szContent) +1) * sizeof(char *);
+		char * strDirBuf = (char *) malloc(lencontent);
+		size_t outlen = trimwhitespace(strDirBuf,lencontent,szContent);
+		strContent = strDirBuf;
+	}
+
+	// replace \\ with /
+	{
+		size_t lencontent = (strlen(strContent) +1) * sizeof(char *);
+		char * strDirBuf = (char *) malloc(lencontent);
+		size_t p = 0;
+
+		memset(strDirBuf,'\0',lencontent);
+
+		for (; p < lencontent; p++)
+		{
+			if (strContent[p] == '\\')
+				strDirBuf[p] = '/';
+			else
+				strDirBuf[p] = strContent[p];
+		}
+		free (strContent);
+		strContent = strDirBuf;
+	}
 
     log_info (_("Looking for files in content directory : %s\n"),
-              ut->contentlist->content[i]);
+              strContent);
 
-    size = strlen (ut->contentlist->content[i]);
-    if (ut->contentlist->content[i][size - 1] == '/')
-      ut->contentlist->content[i][size - 1] = '\0';
-    title = strrchr (ut->contentlist->content[i], '/');
+    size = strlen (strContent);
+    if (strContent[size - 1] == '/') strContent[size - 1] = '\0';
+    title = strrchr (strContent, '/');
     if (title)
       title++;
     else
@@ -681,13 +709,13 @@ build_metadata_list (struct ushare_t *ut)
       title = ut->contentlist->content[i];
     }
 
-    entry = upnp_entry_new (ut, title, ut->contentlist->content[i],
+    entry = upnp_entry_new (ut, title, strContent,
                             ut->root_entry, -1, true);
 
     if (!entry)
       continue;
     upnp_entry_add_child (ut, ut->root_entry, entry);
-    metadata_add_container (ut, entry, ut->contentlist->content[i]);
+    metadata_add_container (ut, entry, strContent);
   }
 
   log_info (_("Found %d files and subdirectories.\n"), ut->nr_entries);
@@ -717,4 +745,5 @@ rb_compare (const void *pa, const void *pb,
 
   return 0;
 }
+
 

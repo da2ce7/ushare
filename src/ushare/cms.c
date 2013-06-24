@@ -125,8 +125,7 @@ cms_get_protocol_info (struct action_event_t *event)
   *respPtr = '\0';
 
   {
-  IXML_Document *actionResult = NULL;
-  UpnpActionRequest_set_ActionResult(event->request, actionResult);
+  IXML_Document *actionResult = UpnpActionRequest_get_ActionResult(event->request);
 
   upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_SOURCE, respText);
   upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_SINK, "");
@@ -145,8 +144,7 @@ cms_get_current_connection_ids (struct action_event_t *event)
     return false;
 
   {
-  IXML_Document *actionResult = NULL;
-  UpnpActionRequest_set_ActionResult(event->request, actionResult);
+  IXML_Document *actionResult = UpnpActionRequest_get_ActionResult(event->request);
 
   upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_CONNECTION_IDS, "");
 
@@ -166,8 +164,7 @@ cms_get_current_connection_info (struct action_event_t *event)
     return false;
 
   {
-  IXML_Document *actionResult = NULL;
-  UpnpActionRequest_set_ActionResult(event->request, actionResult);
+  IXML_Document *actionResult = UpnpActionRequest_get_ActionResult(event->request);
 
   upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_CONNECTION_ID,
                      SERVICE_CMS_DEFAULT_CON_ID);

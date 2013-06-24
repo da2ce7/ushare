@@ -242,7 +242,7 @@ http_get_info (const char *filename, OUT UpnpFileInfo *info)
   /* file exist and can be read */
   UpnpFileInfo_set_FileLength(info,st.st_size);
   UpnpFileInfo_set_LastModified(info,st.st_mtime);
-  UpnpFileInfo_set_IsDirectory(info,st.st_mode);
+  UpnpFileInfo_set_IsDirectory(info,S_ISDIR (st.st_mode));
 
   protocol = 
 #ifdef HAVE_DLNA
@@ -462,17 +462,17 @@ http_seek (UpnpWebFileHandle fh, off_t offset, int origin)
   switch (origin)
   {
   case SEEK_SET:
-    log_verbose ("Attempting to seek to %jd (was at %jd) in %s\n",
+    log_verbose ("Attempting to seek to %ld (was at %ld) in %s\n",
                 offset, file->pos, file->fullpath);
     newpos = offset;
     break;
   case SEEK_CUR:
-    log_verbose ("Attempting to seek by %jd from %jd in %s\n",
+    log_verbose ("Attempting to seek by %ld from %ld in %s\n",
                 offset, file->pos, file->fullpath);
     newpos = file->pos + offset;
     break;
   case SEEK_END:
-    log_verbose ("Attempting to seek by %jd from end (was at %jd) in %s\n",
+    log_verbose ("Attempting to seek by %ld from end (was at %ld) in %s\n",
                 offset, file->pos, file->fullpath);
 
     if (file->type == FILE_LOCAL)

@@ -151,4 +151,6 @@ LONG WindowsRegistryTools_GetStringRegKey(HKEY hKey, wchar_t const *const strVal
 
 #endif
 
+size_t trimwhitespace(char *out, size_t len, const char *str);
+
 #endif /* _OS_DEP_H_ */
