@@ -13,10 +13,13 @@
 #include <winsock_wrapper.h>
 #endif
 
+
 #include <stdio.h>
-#include <signal.h>
+#include <sys/types.h>
+#include <wchar.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <errno.h>
 

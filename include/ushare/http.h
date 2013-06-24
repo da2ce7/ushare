@@ -25,6 +25,14 @@
 #include <upnp/upnp.h>
 #include <upnp/upnptools.h>
 
+void http_setcallbaks();
+
+#ifdef _WIN32
+bool httpGetDataFile_char(IN char const * const strFilename, OUT wchar_t const **const wstrFilePath);
+bool httpGetDataFile(IN wchar_t const * const wstrFilename, OUT wchar_t const **const wstrFilePath);
+#else
+#endif
+
 VDCallback_GetInfo *callbackGetInfo;
 VDCallback_Open *callbackOpen;
 VDCallback_Read *callbackRead;

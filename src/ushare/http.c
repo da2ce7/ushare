@@ -23,6 +23,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <wchar.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
@@ -48,6 +49,46 @@
 
 #define PROTOCOL_TYPE_PRE_SZ  11   /* for the str length of "http-get:*:" */
 #define PROTOCOL_TYPE_SUFF_SZ 2    /* for the str length of ":*" */
+
+
+#ifdef _WIN32
+bool httpGetDataFile_char(IN char const * const strFilename, OUT wchar_t const **const wstrFilePath)
+{
+	 wchar_t * wstrFilename = (wchar_t *) malloc(PATH_MAX * sizeof(wchar_t));
+	 _snwprintf(wstrFilename,PATH_MAX,L"%hs",strFilename);
+
+	 {
+	 bool b = httpGetDataFile(wstrFilename,wstrFilePath);
+	 free(wstrFilename);
+	 return b;
+	 }
+}
+
+
+bool httpGetDataFile(IN wchar_t const * const wstrFilename, OUT wchar_t const **const wstrFilePath)
+{
+	wchar_t * wstrFilePathBuff = (wchar_t *) malloc(PATH_MAX * sizeof(wchar_t));
+
+	static wchar_t const * s_http_wstrAppDataPath = NULL;
+
+
+
+	if (NULL == wstrFilename) return false;
+
+	if (NULL == s_http_wstrAppDataPath)
+	{
+		Windows_GetAppDataFolderFromRegistry(&s_http_wstrAppDataPath);
+		Windows_ExpandEnvironmentStrings(s_http_wstrAppDataPath,&s_http_wstrAppDataPath);
+	}
+
+	_snwprintf(wstrFilePathBuff,PATH_MAX,L"%s\\%hs\\%s\\%s",s_http_wstrAppDataPath,SYSCONFDIR,L"data",wstrFilename);
+	*wstrFilePath = (wchar_t *) realloc(wstrFilePathBuff,PATH_MAX * sizeof(wchar_t)); // set it.
+
+	return true;
+}
+#else
+#endif
+
 
 struct web_file_t {
   char *fullpath;
@@ -83,6 +124,28 @@ set_info_file (IN UpnpFileInfo *info, const off_t length,
   UpnpFileInfo_set_ContentType(info,content_type);
 }
 
+
+int http_getVirtualInfo(OUT UpnpFileInfo *info, char const * const strFilename, char const * const strFileMime)
+{
+#ifdef _WIN32
+	  wchar_t const * wstrFilepath = NULL;
+
+	  httpGetDataFile_char(strFilename,&wstrFilepath);
+	  {
+	  struct _stat st;
+	  _wstat (wstrFilepath, &st);
+	  set_info_file (info, st.st_size, strFileMime);
+	  }
+	  return 0;
+#else
+	  struct stat st;
+	  stat (ICON_FILE_SM_PNG, &st);
+	  set_info_file (info, st.st_size, ICON_MIME_PNG);
+	  return 0;
+#endif
+}
+
+
 static int
 http_get_info (const char *filename, OUT UpnpFileInfo *info)
 {
@@ -100,38 +163,22 @@ http_get_info (const char *filename, OUT UpnpFileInfo *info)
 
   if (!strcmp (filename, ICON_LOCATION_SM_PNG))
   {
-    struct stat st;
-
-    stat (ICON_FILE_SM_PNG, &st);
-    set_info_file (info, st.st_size, ICON_MIME_PNG);
-    return 0;
+	  return http_getVirtualInfo(info,ICON_FILE_SM_PNG,ICON_MIME_PNG);
   }
 
   if (!strcmp (filename, ICON_LOCATION_SM_JPEG))
   {
-    struct stat st;
-
-    stat (ICON_FILE_SM_JPEG, &st);
-    set_info_file (info, st.st_size, ICON_MIME_JPEG);
-    return 0;
+	  return http_getVirtualInfo(info,ICON_FILE_SM_JPEG,ICON_MIME_JPEG);
   }
 
   if (!strcmp (filename, ICON_LOCATION_LRG_PNG))
   {
-    struct stat st;
-
-    stat (ICON_FILE_LRG_PNG, &st);
-    set_info_file (info, st.st_size, ICON_MIME_PNG);
-    return 0;
+	  return http_getVirtualInfo(info,ICON_FILE_LRG_PNG,ICON_MIME_PNG);
   }
 
   if (!strcmp (filename, ICON_LOCATION_LRG_JPEG))
   {
-    struct stat st;
-
-    stat (ICON_FILE_LRG_JPEG, &st);
-    set_info_file (info, st.st_size, ICON_MIME_JPEG);
-    return 0;
+	  return http_getVirtualInfo(info,ICON_FILE_LRG_JPEG,ICON_MIME_JPEG);
   }
 
   if (!strcmp (filename, CDS_LOCATION))
@@ -247,10 +294,17 @@ get_file_local (const char *fullpath)
   struct web_file_t *file;
   int fd;
 
+#ifdef _WIN32
+  wchar_t const * http_fullpathex = NULL;
+
+  httpGetDataFile_char(fullpath,&http_fullpathex);
+#else
+#endif
+
   log_verbose ("Fullpath : %s\n", fullpath);
 
 #ifdef _WIN32
-  fd = _open (fullpath, O_RDONLY | O_RAW );
+  fd = _wopen (http_fullpathex, O_RDONLY | O_RAW );
   if (fd < 0)
     return NULL;
 #else
@@ -372,7 +426,7 @@ http_read (UpnpWebFileHandle fh, char *buf, size_t buflen)
   if (len >= 0)
     file->pos += len;
 
-  log_verbose ("Read %zd bytes.\n", len);
+  log_verbose ("Read %ld bytes.\n", len);
 
   return len;
 }
@@ -500,6 +554,17 @@ http_close (UpnpWebFileHandle fh)
 
   return 0;
 }
+
+void http_setcallbaks(){
+
+	  UpnpVirtualDir_set_GetInfoCallback(&http_get_info);
+	  UpnpVirtualDir_set_OpenCallback(&http_open);
+	  UpnpVirtualDir_set_ReadCallback(&http_read);
+	  UpnpVirtualDir_set_WriteCallback(&http_write);
+	  UpnpVirtualDir_set_SeekCallback(&http_seek);
+	  UpnpVirtualDir_set_CloseCallback(&http_close);
+};
+
 
 //struct VirtualDirCallbacks virtual_dir_callbacks = {
 //  http_get_info,

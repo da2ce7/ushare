@@ -94,7 +94,7 @@ find_service_action (IN UpnpActionRequest *request,
 }
 
 bool
-upnp_add_response (struct action_event_t *event, char *key, const char *value)
+upnp_add_response (IN OUT IXML_Document ** const actionResult, struct action_event_t const * const event, char *key, const char *value)
 {
 
 
@@ -109,10 +109,9 @@ upnp_add_response (struct action_event_t *event, char *key, const char *value)
     return false;
 
   {
-	  IXML_Document * actionResult = UpnpActionRequest_get_ActionResult(event->request);
 	  const char * szActionName = UpnpActionRequest_get_ActionName_cstr(event->request);
 
-	  res = UpnpAddToActionResponse (&actionResult, szActionName, event->service->type, key, val);
+	  res = UpnpAddToActionResponse (actionResult, szActionName, event->service->type, key, val);
   }
 
   if (res != UPNP_E_SUCCESS)
@@ -120,6 +119,8 @@ upnp_add_response (struct action_event_t *event, char *key, const char *value)
       free (val);
       return false;
     }
+
+  
 
   free (val);
   return true;

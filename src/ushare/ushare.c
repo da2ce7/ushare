@@ -378,12 +378,7 @@ init_upnp (struct ushare_t *ut)
   UpnpEnableWebserver (TRUE);
 
   {
-	  //UpnpVirtualDir_set_GetInfoCallback(*callbackGetInfo);
-	  //UpnpVirtualDir_set_OpenCallback(*callbackOpen);
-	  //UpnpVirtualDir_set_ReadCallback(*callbackRead);
-	  //UpnpVirtualDir_set_WriteCallback(*callbackWrite);
-	  //UpnpVirtualDir_set_SeekCallback(*callbackSeek);
-	  //UpnpVirtualDir_set_CloseCallback(*callbackClose);
+	  http_setcallbaks();
   }
 
   if (res != UPNP_E_SUCCESS)

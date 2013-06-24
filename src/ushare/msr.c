@@ -56,8 +56,15 @@ msr_is_authorized (struct action_event_t *event)
   if (!event)
     return false;
 
+  {
+  IXML_Document *actionResult = NULL;
+  UpnpActionRequest_set_ActionResult(event->request, actionResult);
+
   /* send a fake authorization to these stupid MS players ;-) */
-  upnp_add_response (event, SERVICE_MSR_ARG_RESULT, SERVICE_MSR_STATUS_OK);
+  upnp_add_response (&actionResult, event, SERVICE_MSR_ARG_RESULT, SERVICE_MSR_STATUS_OK);
+
+  UpnpActionRequest_set_ActionResult(event->request, actionResult);
+  }
 
   return event->status;
 }
@@ -79,8 +86,15 @@ msr_is_validated (struct action_event_t *event)
   if (!event)
     return false;
 
+  {
+  IXML_Document *actionResult = NULL;
+  UpnpActionRequest_set_ActionResult(event->request, actionResult);
+
   /* send a fake validation to these stupid MS players ;-) */
-  upnp_add_response (event, SERVICE_MSR_ARG_RESULT, SERVICE_MSR_STATUS_OK);
+  upnp_add_response (&actionResult, event, SERVICE_MSR_ARG_RESULT, SERVICE_MSR_STATUS_OK);
+
+  UpnpActionRequest_set_ActionResult(event->request, actionResult);
+  }
 
   return event->status;
 }

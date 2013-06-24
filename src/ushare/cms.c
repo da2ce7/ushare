@@ -124,8 +124,15 @@ cms_get_protocol_info (struct action_event_t *event)
   }
   *respPtr = '\0';
 
-  upnp_add_response (event, SERVICE_CMS_ARG_SOURCE, respText);
-  upnp_add_response (event, SERVICE_CMS_ARG_SINK, "");
+  {
+  IXML_Document *actionResult = NULL;
+  UpnpActionRequest_set_ActionResult(event->request, actionResult);
+
+  upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_SOURCE, respText);
+  upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_SINK, "");
+
+  UpnpActionRequest_set_ActionResult(event->request, actionResult);
+  }
 
   free (respText);
   return event->status;
@@ -137,7 +144,14 @@ cms_get_current_connection_ids (struct action_event_t *event)
   if (!event)
     return false;
 
-  upnp_add_response (event, SERVICE_CMS_ARG_CONNECTION_IDS, "");
+  {
+  IXML_Document *actionResult = NULL;
+  UpnpActionRequest_set_ActionResult(event->request, actionResult);
+
+  upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_CONNECTION_IDS, "");
+
+  UpnpActionRequest_set_ActionResult(event->request, actionResult);
+  }
 
   return event->status;
 }
@@ -151,25 +165,33 @@ cms_get_current_connection_info (struct action_event_t *event)
   if (!event)
     return false;
 
-  upnp_add_response (event, SERVICE_CMS_ARG_CONNECTION_ID,
+  {
+  IXML_Document *actionResult = NULL;
+  UpnpActionRequest_set_ActionResult(event->request, actionResult);
+
+  upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_CONNECTION_ID,
                      SERVICE_CMS_DEFAULT_CON_ID);
-  upnp_add_response (event, SERVICE_CMS_ARG_RCS_ID, SERVICE_CMS_UNKNOW_ID);
-  upnp_add_response (event, SERVICE_CMS_ARG_TRANSPORT_ID,
+  upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_RCS_ID, SERVICE_CMS_UNKNOW_ID);
+  upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_TRANSPORT_ID,
                      SERVICE_CMS_UNKNOW_ID);
 
   while (list->extension)
   {
     char *protocol = mime_get_protocol (list);
-    upnp_add_response (event, SERVICE_CMS_ARG_PROT_INFO, protocol);
+    upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_PROT_INFO, protocol);
     free (protocol);
     list++;
   }
 
-  upnp_add_response (event, SERVICE_CMS_ARG_PEER_CON_MANAGER, "");
-  upnp_add_response (event, SERVICE_CMS_ARG_PEER_CON_ID,
+  upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_PEER_CON_MANAGER, "");
+  upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_PEER_CON_ID,
                      SERVICE_CMS_UNKNOW_ID);
-  upnp_add_response (event, SERVICE_CMS_ARG_DIRECTION, SERVICE_CMS_OUTPUT);
-  upnp_add_response (event, SERVICE_CMS_ARG_STATUS, SERVICE_CMS_STATUS_OK);
+  upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_DIRECTION, SERVICE_CMS_OUTPUT);
+  upnp_add_response (&actionResult, event, SERVICE_CMS_ARG_STATUS, SERVICE_CMS_STATUS_OK);
+
+
+  UpnpActionRequest_set_ActionResult(event->request, actionResult);
+  }
 
   return event->status;
 }

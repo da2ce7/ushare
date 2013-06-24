@@ -296,12 +296,14 @@ int
 parse_config_file (struct ushare_t *ut)
 {
   char filename[PATH_MAX];
-  wchar_t wFilename[PATH_MAX];
+  wchar_t * wFilename = (wchar_t *) malloc(PATH_MAX * sizeof(wchar_t));
   FILE *conffile;
   char *line = NULL;
   size_t size = 0;
   ssize_t read;
   const wchar_t * wstrAppDataPath = NULL;
+
+  
 
   if (!ut)
     return -1;

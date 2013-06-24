@@ -43,7 +43,8 @@ bool find_service_action (IN UpnpActionRequest *request,
                           struct service_t **service,
                           struct service_action_t **action);
 
-bool upnp_add_response (struct action_event_t *event,
+bool upnp_add_response (IN OUT IXML_Document ** const actionResult,
+						struct action_event_t const * const event,
                         char *key, const char *value);
 
 char * upnp_get_string (UpnpActionRequest *request, const char *key);

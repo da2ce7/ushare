@@ -8,6 +8,6 @@
 
 #define HAVE_DLNA 1
 
-#define USHARE_DATADIR "data"
+#define USHARE_DATADIR
 
 #endif
