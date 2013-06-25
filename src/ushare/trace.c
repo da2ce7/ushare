@@ -85,7 +85,7 @@ void print_log (log_level level, const char *fmt, va_list * pvl)
 		if(nsize >= size) return;
 		// ------------------------------------
 		{
-			FILE *output = level == ULOG_VERBOSE ? stderr : stdout;
+			FILE *output = level == ULOG_ERROR ? stderr : stdout;
 			fprintf_s(output,buffer);
 		}
 		free(buffer); buffer = NULL;

@@ -181,37 +181,57 @@
 static bool
 	filter_has_val (const char *filter, const char *val)
 {
-	char *x = NULL, *token = NULL;
-	char *m_buffer = NULL, *buffer;
-	int len = strlen (val);
 	bool ret = false;
+	char const * const x = _strdup(filter);
 
 	if (!strcmp (filter, "*"))
 		return true;
-
-	x = _strdup (filter);
 	if (x)
 	{
-		m_buffer = (char*) malloc (strlen (x));
+		size_t lx = (strlen(x));
+		char *  buffer = NULL;
+		char * m_buffer = (char*) malloc((lx +1) * sizeof(char));
+		memset(m_buffer,'\0',lx +1); //clear the string.
+		buffer = m_buffer;
+
 		if (m_buffer)
 		{
-			buffer = m_buffer;
-			token = strtok_r (x, ",", &buffer);
-			while (token)
+			size_t length = lx; // no null terminating char.
+			size_t count = 0;
+			size_t pos = 0;
+			char charbuf = 0;
+			char delchar = ',';
+
+			for(;;)
 			{
-				if (*val == '@')
-					token = strchr (token, '@');
-				if (token && !strncmp (token, val, len))
+				charbuf = x[count];
+
+				// set the char to the buffer (if it isn't the delchar).
+				if (charbuf != delchar) buffer[pos++] = charbuf;
+
+				if (pos > 0)
 				{
-					ret = true;
-					break;
+					if (charbuf == delchar || count == length)
+					{
+						char * strBuf = (char*)malloc((pos+1) * sizeof(char));
+						char const *const str = strcpy(strBuf, buffer);
+						ret = !strncmp (str, val, pos);
+
+						free(strBuf);
+
+						if (ret) break;
+
+						memset(buffer,'\0',length+1);
+
+						pos = 0; // reset the position.
+					}
 				}
-				token = strtok_r (NULL, ",", &buffer);
+				if (count++ == length) break; 
 			}
-			free (m_buffer);
 		}
-		free (x);
+		free (buffer);
 	}
+	free ((void*)x);
 	return ret;
 }
 

@@ -654,7 +654,7 @@ LONG Windows_GetInstallFolderFromRegistry(wchar_t const **const out_InstallFolde
 LONG Windows_GetAppDataFolderFromRegistry(wchar_t const **const out_AppDataFolderPath)
 {
 	HKEY hKey=0;
-	LSTATUS lRes = RegOpenKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\\Windows\\\CurrentVersion\\Explorer\\User Shell Folders", 0, KEY_READ, &hKey);
+	LSTATUS lRes = RegOpenKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", 0, KEY_READ, &hKey);
 	BOOL bExistsAndSuccess = (lRes == ERROR_SUCCESS);
 	BOOL bDoesNotExistsSpecifically = (lRes == ERROR_FILE_NOT_FOUND);
 
@@ -760,7 +760,7 @@ size_t trimwhitespace(char *out, size_t len, const char *str)
 		end++;
 
 		// Set output size to minimum of trimmed string length and buffer size minus 1
-		out_size = (end - str) < len-1 ? (end - str) : len-1;
+		out_size = ((size_t)(end - str)) < len-1 ? (end - str) : len-1;
 
 		// Copy trimmed string and add null terminator
 		memcpy(out, str, out_size);

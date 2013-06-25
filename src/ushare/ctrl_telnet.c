@@ -160,7 +160,7 @@ ctrl_telnet_start (int port)
 
   /* Clears us from "address already in use" errors */
   if (setsockopt (ttd.listener, SOL_SOCKET, SO_REUSEADDR,
-                  &yes, sizeof (int)) == -1)
+                  (const char*)&yes, sizeof (int)) == -1)
     perror ("setsockopt");
 
   ttd.local_address.sin_family = AF_INET;

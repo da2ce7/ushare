@@ -292,7 +292,8 @@ static UpnpWebFileHandle
 get_file_local (const char *fullpath)
 {
   struct web_file_t *file;
-  int fd;
+  FILE * fd = NULL;
+  errno_t err = 0;
 
 #ifdef _WIN32
   wchar_t const * http_fullpathex = NULL;
@@ -304,7 +305,7 @@ get_file_local (const char *fullpath)
   log_verbose ("Fullpath : %s\n", fullpath);
 
 #ifdef _WIN32
-  fd = _wopen (http_fullpathex, O_RDONLY | O_RAW );
+  err = _wfopen_s (&fd,http_fullpathex, L"rb" );
   if (fd < 0)
     return NULL;
 #else
@@ -329,8 +330,10 @@ http_open (const char *filename, enum UpnpOpenFileMode mode)
 {
   extern struct ushare_t *ut;
   struct upnp_entry_t *entry = NULL;
-  struct web_file_t *file;
-  int fd, upnp_id = 0;
+  struct web_file_t *file  = NULL;
+  FILE *fd = NULL;
+  int upnp_id = 0;
+  errno_t err = 0;
 
   if (!filename)
     return NULL;
@@ -377,9 +380,13 @@ http_open (const char *filename, enum UpnpOpenFileMode mode)
   log_verbose ("Fullpath : %s\n", entry->fullpath);
 
 #ifdef _WIN32
-    fd = _open (entry->fullpath, O_RDONLY | O_RAW );
-  if (fd < 0)
-    return NULL;
+  {
+	  wchar_t * wFilename = NULL;
+	  _snwprintf(wFilename,PATH_MAX,L"%hs",entry->fullpath);
+	  err = _wfopen_s (&fd,wFilename, L"rb" );
+	  if (fd < 0)
+		  return NULL;
+  }
 #else
   fd = open (entry->fullpath, O_RDONLY | O_NONBLOCK | O_SYNC | O_NDELAY);
   if (fd < 0)
@@ -411,11 +418,16 @@ http_read (UpnpWebFileHandle fh, char *buf, size_t buflen)
   {
   case FILE_LOCAL:
     log_verbose ("Read local file.\n");
+#ifdef _WIN32
+    len = fread (buf, sizeof(char), buflen,file->detail.local.fd);
+#else
     len = _read (file->detail.local.fd, buf, buflen);
+#endif
+
     break;
   case FILE_MEMORY:
     log_verbose ("Read file from memory.\n");
-    len = MIN ((size_t) buflen, file->detail.memory.len - file->pos);
+    len = MIN ((size_t) buflen, (size_t) (file->detail.memory.len - file->pos));
     memcpy (buf, file->detail.memory.contents + file->pos, (size_t) len);
     break;
   default:
@@ -503,7 +515,11 @@ http_seek (UpnpWebFileHandle fh, off_t offset, int origin)
 
     /* Don't seek with origin as specified above, as file may have
        changed in size since our last stat. */
+#ifdef _WIN32
+    if (fseek (file->detail.local.fd, newpos, SEEK_SET) == -1)
+#else
     if (_lseek (file->detail.local.fd, newpos, SEEK_SET) == -1)
+#endif
     {
       log_verbose ("%s: cannot seek: %s\n", file->fullpath, strerror (errno));
       return -1;
@@ -536,8 +552,12 @@ http_close (UpnpWebFileHandle fh)
   switch (file->type)
   {
   case FILE_LOCAL:
+#ifdef _WIN32
+    fclose (file->detail.local.fd);
+#else
     _close (file->detail.local.fd);
-    break;
+#endif
+	break;
   case FILE_MEMORY:
     /* no close operation */
     if (file->detail.memory.contents)

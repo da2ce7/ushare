@@ -148,7 +148,6 @@ static void
 				char charbuf = 0;
 				char delchar = USHARE_DIR_DELIM[0];
 
-
 				for(;;)
 				{
 					charbuf = x[count];
@@ -174,6 +173,7 @@ static void
 				}
 				free (buffer);
 			}
+		free((void*)x);
 		}
 	}
 }
@@ -251,8 +251,8 @@ ushare_set_override_iconv_err (struct ushare_t *ut, const char *arg)
 
   ut->override_iconv_err = false;
 
-  if (!strcasecmp (arg, "yes")
-      || !strcasecmp (arg, "true")
+  if (!strcasecmp ((char *)arg, "yes")
+      || !strcasecmp ((char *)arg, "true")
       || !strcmp (arg, "1"))
     ut->override_iconv_err = true;
 }

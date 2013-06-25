@@ -84,7 +84,7 @@ getMimeType (const char *extension)
   list = MIME_Type_List;
   while (list->extension)
   {
-    if (!strcasecmp (list->extension, extension))
+    if (!strcasecmp (list->extension, (char *)extension))
       return list;
     list++;
   }
@@ -392,7 +392,10 @@ upnp_entry_new (struct ushare_t *ut, const char *name, const char *fullpath,
   entry->fd = -1;
 
   if (entry->id && entry->url)
+  {
+	  if (ut->verbose)
     log_verbose ("Entry->URL (%d): %s\n", entry->id, entry->url);
+  }
 
   return entry;
 }
@@ -599,7 +602,8 @@ metadata_add_container (struct ushare_t *ut,
       malloc (strlen (container) + strlen (namelist[i]->d_name) + 2);
     sprintf (fullpath, "%s/%s", container, namelist[i]->d_name);
 
-    log_verbose ("%s\n", fullpath);
+	if (ut->verbose)
+		log_verbose ("%s\n", fullpath);
 
     if (stat (fullpath, &st) < 0)
     {
