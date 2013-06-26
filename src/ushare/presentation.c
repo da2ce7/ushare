@@ -37,7 +37,7 @@
 #include "util_iconv.h"
 
 #define CGI_ACTION "action="
-#define CGI_ACTION_ADD "add"
+//#define CGI_ACTION_ADD "add"
 #define CGI_ACTION_DEL "del"
 #define CGI_ACTION_REFRESH "refresh"
 #define CGI_PATH "path"
@@ -57,19 +57,20 @@ process_cgi (struct ushare_t *ut, char *cgiargs)
 
   action = cgiargs + strlen (CGI_ACTION);
 
-  if (!strncmp (action, CGI_ACTION_ADD, strlen (CGI_ACTION_ADD)))
+/*  if (!strncmp (action, CGI_ACTION_ADD, strlen (CGI_ACTION_ADD)))
   {
-    char *path = NULL;
-    path = action + strlen (CGI_ACTION_ADD) + 1;
+	  char *path = NULL;
+	  path = action + strlen (CGI_ACTION_ADD) + 1;
 
-    if (path && !strncmp (path, CGI_PATH"=", strlen (CGI_PATH) + 1))
-    {
-      ut->contentlist = content_add (ut->contentlist,
-                                     path + strlen (CGI_PATH) + 1);
-      refresh = 1;
-    }
+	  if (path && !strncmp (path, CGI_PATH"=", strlen (CGI_PATH) + 1))
+	  {
+		  ut->contentlist = content_add (ut->contentlist,
+			  path + strlen (CGI_PATH) + 1);
+		  refresh = 1;
+	  }
   }
-  else if (!strncmp (action, CGI_ACTION_DEL, strlen (CGI_ACTION_DEL)))
+  else*/
+  if (!strncmp (action, CGI_ACTION_DEL, strlen (CGI_ACTION_DEL)))
   {
 	  char *shares = _strdup (action + strlen (CGI_ACTION_DEL) + 1);
 	  char *m_buffer = (char*) malloc (strlen (shares) * sizeof (char));
@@ -191,18 +192,18 @@ build_presentation_page (struct ushare_t *ut)
   buffer_append (ut->presentation, "</form>");
   buffer_append (ut->presentation, "<br/>");
 
-  buffer_appendf (ut->presentation,
-                  "<form method=\"get\" action=\"%s\">", USHARE_CGI);
-  buffer_append (ut->presentation, _("Add a new share :  "));
-  buffer_appendf (ut->presentation,
-                  "<input type=\"hidden\" name=\"action\" value=\"%s\"/>",
-                  CGI_ACTION_ADD);
-  buffer_append (ut->presentation, "<input type=\"text\" name=\""CGI_PATH"\"/>");
-  buffer_appendf (ut->presentation,
-                  "<input type=\"submit\" value=\"%s\"/>", _("Share!"));
-  buffer_append (ut->presentation, "</form>");
+  //buffer_appendf (ut->presentation,
+  //                "<form method=\"get\" action=\"%s\">", USHARE_CGI);
+  //buffer_append (ut->presentation, _("Add a new share :  "));
+  //buffer_appendf (ut->presentation,
+  //                "<input type=\"hidden\" name=\"action\" value=\"%s\"/>",
+  //                CGI_ACTION_ADD);
+  //buffer_append (ut->presentation, "<input type=\"text\" name=\""CGI_PATH"\"/>");
+  //buffer_appendf (ut->presentation,
+  //                "<input type=\"submit\" value=\"%s\"/>", _("Share!"));
+  //buffer_append (ut->presentation, "</form>");
 
-  buffer_append (ut->presentation, "<br/>");
+  //buffer_append (ut->presentation, "<br/>");
 
   buffer_appendf (ut->presentation,
                   "<form method=\"get\" action=\"%s\">", USHARE_CGI);
