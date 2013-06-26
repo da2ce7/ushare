@@ -56,9 +56,15 @@ struct upnp_entry_lookup_name_t {
   struct upnp_entry_t *entry_ptr;
 };
 
+#ifdef _WIN32
 static int
 metadata_add_file (struct ushare_t *ut, struct upnp_entry_t *entry,
-                   const char *file, const char *name, struct stat *st_ptr);
+                   const char *file, const char *name, struct _stat64 *st_ptr);
+#else
+static int
+metadata_add_file (struct ushare_t *ut, struct upnp_entry_t *entry,
+                   const char *file, const char *name, struct  _stat64 *st_ptr);
+#endif
 
 static char *
 getExtension (const char *filename)
@@ -182,8 +188,8 @@ static struct mime_type_t Container_MIME_Type =
 static int
 vh_file_exists (const char *file)
 {
-  struct stat st;
-  return !stat (file, &st);
+  struct  _stat64 st;
+  return ! _stat64 (file, &st);
 }
 
 static int
@@ -198,7 +204,13 @@ upnp_audio_get_cover (struct ushare_t *ut, struct upnp_entry_t *entry,
 
   char *s, *dir = NULL, *file = NULL, *cv = NULL, *f = NULL;
   unsigned int i, j;
-  struct stat st;
+
+#ifdef _WIN32
+  struct _stat64 st;
+#else
+  struct  _stat64 st;
+#endif
+
   int cover_id;
 
   if (!class || strcmp (class, UPNP_AUDIO))
@@ -240,7 +252,16 @@ end:
   //printf ("Path: %s\n", fullpath);
   //printf (" Cover: %s\n", cv);
 
-  stat (fullpath, &st);
+#ifdef _WIN32
+	{
+		wchar_t * wFilename = (wchar_t *) malloc((PATH_MAX+1)*sizeof(wchar_t*));
+		_snwprintf(wFilename,PATH_MAX,L"%hs",fullpath);
+		_wstat64 (wFilename, &st);
+	}
+#else
+	 _stat64 (fullpath, &st);
+#endif
+
   cover_id = metadata_add_file (ut, entry, cv, f, &st);
   //printf (" Cover ID: %d\n", cover_id);
 
@@ -258,7 +279,7 @@ end:
 
 static struct upnp_entry_t *
 upnp_entry_new (struct ushare_t *ut, const char *name, const char *fullpath,
-                struct upnp_entry_t *parent, off_t size, int dir)
+                struct upnp_entry_t *parent, ssize_t size, int dir)
 {
   struct upnp_entry_t *entry = NULL;
   char *title = NULL, *x = NULL;
@@ -394,7 +415,7 @@ upnp_entry_new (struct ushare_t *ut, const char *name, const char *fullpath,
   if (entry->id && entry->url)
   {
 	  if (ut->verbose)
-    log_verbose ("Entry->URL (%d): %s\n", entry->id, entry->url);
+   if (ut->verbose) log_verbose ("Entry->URL (%d): %s\n", entry->id, entry->url);
   }
 
   return entry;
@@ -477,7 +498,7 @@ upnp_entry_free (struct ushare_t *ut, struct upnp_entry_t *entry)
     rbdestroy (ut->rb);
     ut->rb = NULL;
 
-    log_verbose ("Freed [%d] entries\n", i);
+    if (ut->verbose) log_verbose ("Freed [%d] entries\n", i);
   }
   else
     _upnp_entry_free (entry);
@@ -521,7 +542,7 @@ upnp_get_entry (struct ushare_t *ut, int id)
 {
   struct upnp_entry_lookup_t *res, entry_lookup;
 
-  log_verbose ("Looking for entry id %d\n", id);
+  if (ut->verbose) log_verbose ("Looking for entry id %d\n", id);
   if (id == 0) /* We do not store the root (id 0) as it is not a child */
     return ut->root_entry;
 
@@ -531,19 +552,25 @@ upnp_get_entry (struct ushare_t *ut, int id)
 
   if (res)
   {
-    log_verbose ("Found at %p\n",
+    if (ut->verbose) log_verbose ("Found at %p\n",
                  ((struct upnp_entry_lookup_t *) res)->entry_ptr);
     return ((struct upnp_entry_lookup_t *) res)->entry_ptr;
   }
 
-  log_verbose ("Not Found\n");
+  if (ut->verbose) log_verbose ("Not Found\n");
 
   return NULL;
 }
 
+#ifdef _WIN32
 static int
 metadata_add_file (struct ushare_t *ut, struct upnp_entry_t *entry,
-                   const char *file, const char *name, struct stat *st_ptr)
+                   const char *file, const char *name, struct _stat64 *st_ptr)
+#else
+static int
+metadata_add_file (struct ushare_t *ut, struct upnp_entry_t *entry,
+                   const char *file, const char *name, struct  _stat64 *st_ptr)
+#endif
 {
   if (!entry || !file || !name)
     return -1;
@@ -570,8 +597,8 @@ static void
 metadata_add_container (struct ushare_t *ut,
                         struct upnp_entry_t *entry, const char *container)
 {
-  struct dirent **namelist;
-  int n,i;
+  struct dirent **namelist = NULL;
+  ssize_t n = 0,i = 0;
 
   if (!entry || !container)
     return;
@@ -589,8 +616,19 @@ metadata_add_container (struct ushare_t *ut,
 
   for (i = 0; i < n; i++)
   {
-    struct stat st;
+    struct _stat64 st;
+
     char *fullpath = NULL;
+
+	if (NULL == &namelist)
+	{
+		break;
+	}
+
+	if (NULL == &namelist[i] || NULL == &namelist[i]->d_name[0])
+	{
+		continue;
+	}
 
     if (namelist[i]->d_name[0] == '.')
     {
@@ -605,12 +643,27 @@ metadata_add_container (struct ushare_t *ut,
 	if (ut->verbose)
 		log_verbose ("%s\n", fullpath);
 
-    if (stat (fullpath, &st) < 0)
-    {
-      free (namelist[i]);
-      free (fullpath);
-      continue;
-    }
+
+	{
+#ifdef _WIN32
+		wchar_t * wFilename = (wchar_t *) malloc((PATH_MAX+1)*sizeof(wchar_t*));
+		_snwprintf(wFilename,PATH_MAX,L"%hs",fullpath);
+		if (_wstat64 (wFilename, &st) < 0)
+		{
+			free (namelist[i]);
+			free (fullpath);
+			free (wFilename);
+			continue;
+		}
+#else
+		if ( _stat64 (fullpath, &st) < 0)
+		{
+			free (namelist[i]);
+			free (fullpath);
+			continue;
+		}
+#endif
+  }
 
     if (S_ISDIR (st.st_mode))
     {
@@ -625,7 +678,10 @@ metadata_add_container (struct ushare_t *ut,
       }
     }
     else
-      metadata_add_file (ut, entry, fullpath, namelist[i]->d_name, &st);
+	{
+		if (S_ISREG (st.st_mode))
+			metadata_add_file (ut, entry, fullpath, namelist[i]->d_name, &st);
+	}
 
     free (namelist[i]);
     free (fullpath);

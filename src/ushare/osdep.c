@@ -130,14 +130,14 @@ char* optarg;
 osip_list_t dir_file_list;
 int dir_file_count = 0;
 
-int scandir(const char *dirname, struct dirent ***namelist,
-			int (*filter)(const struct dirent *),
-			int (*compar)(const struct dirent **, const struct dirent **))
+ssize_t scandir(const char *dirname, struct dirent ***namelist,
+			size_t (*filter)(const struct dirent *),
+			size_t (*compar)(const struct dirent **, const struct dirent **))
 {
 	struct dirent *result = 0;
 	struct dirent **namlist;
-	int namelistlen = 0;
-	int num_enrties= 0;
+	size_t namelistlen = 0;
+	size_t num_enrties= 0;
 
 	size_t len_dername = (strlen(dirname) +1) * sizeof(char *);
 	char * strDirBuf = (char *) malloc(len_dername);
@@ -175,18 +175,28 @@ int scandir(const char *dirname, struct dirent ***namelist,
 		{
 			result = (struct dirent *) malloc(sizeof(struct dirent) + strlen(dir->ent.d_name) + 1);
 			strcpy(result->d_name, dir->ent.d_name);
-			if (filter)
 			{
-				if (filter(result))
+				const char * const strDollar = "$";
+				const char * const strSysVolInfo = "System Volume Information";
+				if(!(result->d_name[0] == strDollar[0]))
 				{
-					namlist[namelistlen] = result;
-					namelistlen++;
+					if(strcmp(result->d_name,strSysVolInfo))
+					{
+						if (filter)
+						{
+							if (filter(result))
+							{
+								namlist[namelistlen] = result;
+								namelistlen++;
+							}
+						}
+						else
+						{
+							namlist[namelistlen] = result;
+							namelistlen++;
+						}
+					}
 				}
-			}
-			else
-			{
-				namlist[namelistlen] = result;
-				namelistlen++;
 			}
 		}
 	}

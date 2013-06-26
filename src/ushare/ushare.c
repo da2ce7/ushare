@@ -127,6 +127,7 @@ ushare_new (void)
   ut->daemon = false;
   ut->override_iconv_err = false;
   ut->cfg_file = NULL;
+  ut->strNowPlaying = NULL;
 #ifdef HAVE_FAM
   ut->ufam = ufam_init ();
 #endif /* HAVE_FAM */

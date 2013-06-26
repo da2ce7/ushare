@@ -45,7 +45,7 @@ struct upnp_entry_t {
   struct mime_type_t *mime_type;
   char *title;
   char *url;
-  off_t size;
+  ssize_t size;
   int cover_id;
   int fd;
 #ifdef HAVE_FAM

@@ -40,6 +40,10 @@ extern struct ushare_t *ut;
 #ifdef _WIN32
 void print_log (log_level level, const char *fmt, va_list * pvl)
 {
+	if (level == ULOG_VERBOSE)
+		if (!ut->verbose) return;
+
+
 	{
 		if(NULL == fmt) return;
 		if(NULL == pvl) return;

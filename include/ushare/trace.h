@@ -76,12 +76,12 @@ __inline void log_error(const char *fmt,...) {
 __inline void log_verbose(const char *fmt,...) {
 	va_list vl;
     va_start(vl, fmt);
-	print_log (ULOG_NORMAL,fmt,&vl);
+	print_log (ULOG_VERBOSE,fmt,&vl);
 	va_end(vl);
 }
 #else 
 #define log_verbose(s, str...) {        \
-  print_log (ULOG_NORMAL, (s), ##str); \
+  print_log (ULOG_VERBOSE, (s), ##str); \
   }
 #endif
 

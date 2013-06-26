@@ -92,7 +92,7 @@ bool httpGetDataFile(IN wchar_t const * const wstrFilename, OUT wchar_t const **
 
 struct web_file_t {
   char *fullpath;
-  off_t pos;
+  ssize_t pos;
   enum { FILE_LOCAL, FILE_MEMORY } type;
   union {
     struct {
@@ -107,14 +107,14 @@ struct web_file_t {
     } local;
     struct {
       char *contents;
-      off_t len;
+      ssize_t len;
     } memory;
   } detail;
 };
 
 
 static _inline void
-set_info_file (IN UpnpFileInfo *info, const off_t length,
+set_info_file (IN UpnpFileInfo *info, const ssize_t length,
                const char *content_type)
 {
   UpnpFileInfo_set_FileLength(info,length);
@@ -132,14 +132,14 @@ int http_getVirtualInfo(OUT UpnpFileInfo *info, char const * const strFilename, 
 
 	  httpGetDataFile_char(strFilename,&wstrFilepath);
 	  {
-	  struct _stat st;
-	  _wstat (wstrFilepath, &st);
+	  struct _stat64 st;
+	  _wstat64 (wstrFilepath, &st);
 	  set_info_file (info, st.st_size, strFileMime);
 	  }
 	  return 0;
 #else
-	  struct stat st;
-	  stat (ICON_FILE_SM_PNG, &st);
+	  struct  _stat64 st;
+	   _stat64 (ICON_FILE_SM_PNG, &st);
 	  set_info_file (info, st.st_size, ICON_MIME_PNG);
 	  return 0;
 #endif
@@ -151,7 +151,7 @@ http_get_info (const char *filename, OUT UpnpFileInfo *info)
 {
   extern struct ushare_t *ut;
   struct upnp_entry_t *entry = NULL;
-  struct stat st;
+  struct  _stat64 st;
   int upnp_id = 0;
   char *content_type = NULL;
   char *protocol = NULL;
@@ -159,7 +159,7 @@ http_get_info (const char *filename, OUT UpnpFileInfo *info)
   if (!filename || !info)
     return -1;
 
-  log_verbose ("http_get_info, filename : %s\n", filename);
+  if (ut->verbose) log_verbose ("http_get_info, filename : %s\n", filename);
 
   if (!strcmp (filename, ICON_LOCATION_SM_PNG))
   {
@@ -225,7 +225,7 @@ http_get_info (const char *filename, OUT UpnpFileInfo *info)
   if (!entry->fullpath)
     return -1;
 
-  if (stat (entry->fullpath, &st) < 0)
+  if ( _stat64 (entry->fullpath, &st) < 0)
     return -1;
 
 #ifndef _MSC_VER
@@ -338,7 +338,7 @@ http_open (const char *filename, enum UpnpOpenFileMode mode)
   if (!filename)
     return NULL;
 
-  log_verbose ("http_open, filename : %s\n", filename);
+  if (ut->verbose) log_verbose ("http_open, filename : %s\n", filename);
 
   if (mode != UPNP_READ)
     return NULL;
@@ -377,11 +377,22 @@ http_open (const char *filename, enum UpnpOpenFileMode mode)
   if (!entry->fullpath)
     return NULL;
 
-  log_verbose ("Fullpath : %s\n", entry->fullpath);
+  if (NULL == ut->strNowPlaying || strcmp(ut->strNowPlaying,entry->fullpath))
+  {
+	  if (NULL != ut->strNowPlaying) free (ut->strNowPlaying);
+	  {
+	  size_t lenFullpath = (strlen(entry->fullpath) +1) * sizeof(char *);
+	  char * strBufNowPlaying = (char *) malloc(lenFullpath);
+	  ut->strNowPlaying = (char *) memcpy(strBufNowPlaying,entry->fullpath,lenFullpath);
+	  }
+	log_info ("Now Playing: %s\n", ut->strNowPlaying);
+  }
+
+  log_verbose ("Opening File: %s\n", entry->fullpath);
 
 #ifdef _WIN32
   {
-	  wchar_t * wFilename = NULL;
+	  wchar_t * wFilename = (wchar_t *) malloc((PATH_MAX+1)*sizeof(wchar_t*));
 	  _snwprintf(wFilename,PATH_MAX,L"%hs",entry->fullpath);
 	  err = _wfopen_s (&fd,wFilename, L"rb" );
 	  if (fd < 0)
@@ -438,9 +449,10 @@ http_read (UpnpWebFileHandle fh, char *buf, size_t buflen)
   if (len >= 0)
     file->pos += len;
 
-  log_verbose ("Read %ld bytes.\n", len);
+  log_verbose ("Read %lld bytes.\n", len);
 
-  return len;
+  if (len < 0) return -1;
+  else return (int)len;
 }
 
 #ifdef _WIN32
@@ -461,10 +473,10 @@ http_write (UpnpWebFileHandle fh __attribute__((unused)),
 }
 
 static int
-http_seek (UpnpWebFileHandle fh, off_t offset, int origin)
+http_seek (UpnpWebFileHandle fh, ptrdiff_t offset, int origin)
 {
   struct web_file_t *file = (struct web_file_t *) fh;
-  off_t newpos = -1;
+  ssize_t newpos = -1;
 
   log_verbose ("http_seek\n");
 
@@ -474,25 +486,25 @@ http_seek (UpnpWebFileHandle fh, off_t offset, int origin)
   switch (origin)
   {
   case SEEK_SET:
-    log_verbose ("Attempting to seek to %ld (was at %ld) in %s\n",
+    log_verbose ("Attempting to seek to %lld (was at %ld) in %s\n",
                 offset, file->pos, file->fullpath);
     newpos = offset;
     break;
   case SEEK_CUR:
-    log_verbose ("Attempting to seek by %ld from %ld in %s\n",
+    log_verbose ("Attempting to seek by %lld from %ld in %s\n",
                 offset, file->pos, file->fullpath);
     newpos = file->pos + offset;
     break;
   case SEEK_END:
-    log_verbose ("Attempting to seek by %ld from end (was at %ld) in %s\n",
+    log_verbose ("Attempting to seek by %lld from end (was at %ld) in %s\n",
                 offset, file->pos, file->fullpath);
 
     if (file->type == FILE_LOCAL)
     {
-      struct stat sb;
-      if (stat (file->fullpath, &sb) < 0)
+      struct  _stat64 sb;
+      if ( _stat64 (file->fullpath, &sb) < 0)
       {
-        log_verbose ("%s: cannot stat: %s\n",
+        log_verbose ("%s: cannot  _stat64: %s\n",
                     file->fullpath, strerror (errno));
         return -1;
       }
@@ -514,9 +526,9 @@ http_seek (UpnpWebFileHandle fh, off_t offset, int origin)
     }
 
     /* Don't seek with origin as specified above, as file may have
-       changed in size since our last stat. */
+       changed in size since our last  _stat64. */
 #ifdef _WIN32
-    if (fseek (file->detail.local.fd, newpos, SEEK_SET) == -1)
+    if (_fseeki64 (file->detail.local.fd, newpos, SEEK_SET) == -1)
 #else
     if (_lseek (file->detail.local.fd, newpos, SEEK_SET) == -1)
 #endif

@@ -1007,7 +1007,7 @@ RB_ENTRY(_check1)(struct RB_ENTRY(node) *x)
 	{
 		if (x->left->colour!=BLACK && x->right->colour!=BLACK)
 		{
-			fprintf(stderr, "Children of red node not both black, x=%ld", x);
+			fprintf(stderr, "Children of red node not both black, x=%lld", x);
 			return(1);
 		}
 	}
@@ -1016,7 +1016,7 @@ RB_ENTRY(_check1)(struct RB_ENTRY(node) *x)
 	{
 		if (x->left->up != x)
 		{
-			fprintf(stderr, "x->left->up != x, x=%ld", x);
+			fprintf(stderr, "x->left->up != x, x=%lld", x);
 			return(1);
 		}
 
@@ -1028,7 +1028,7 @@ RB_ENTRY(_check1)(struct RB_ENTRY(node) *x)
 	{
 		if (x->right->up != x)
 		{
-			fprintf(stderr, "x->right->up != x, x=%ld", x);
+			fprintf(stderr, "x->right->up != x, x=%lld", x);
 			return(1);
 		}
 
@@ -1053,7 +1053,7 @@ RB_ENTRY(count_black)(struct RB_ENTRY(node) *x)
 
 	if (nleft != nright)
 	{
-		fprintf(stderr, "Black count not equal on left & right, x=%ld", x);
+		fprintf(stderr, "Black count not equal on left & right, x=%lld", x);
 		return(-1);
 	}
 
@@ -1072,7 +1072,7 @@ RB_ENTRY(dumptree)(struct RB_ENTRY(node) *x, int n)
 	if (x!=NULL && x!=RBNULL)
 	{
 		n++;
-		fprintf(stderr, "Tree: %*s %ld: left=%ld, right=%ld, colour=%s, key=%s",
+		fprintf(stderr, "Tree: %*s %lld: left=%lld, right=%lld, colour=%s, key=%s",
 			n,
 			"",
 			x,

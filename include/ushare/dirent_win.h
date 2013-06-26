@@ -118,7 +118,7 @@
 #   define FILE_ATTRIBUTE_DEVICE 0x40
 #endif
 
-/* File type and permission flags for stat() */
+/* File type and permission flags for  _stat64() */
 #if !defined(S_IFMT)
 #   define S_IFMT   _S_IFMT                     /* File type mask */
 #endif

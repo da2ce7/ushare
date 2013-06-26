@@ -72,7 +72,7 @@ typedef int socklen_t;
 #define vsnprintf _vsnprintf
 #define snprintf _snprintf
 
-typedef size_t ssize_t;
+typedef signed __int64 ssize_t;
 
 typedef unsigned int uint32_t;
 
@@ -122,9 +122,9 @@ void putline(char* dir,FILE *stream);
 //	wchar_t *filepathname;
 //}dirent;
 
-int scandir(const char *dir, struct dirent ***namelist,
-      int (*filter)(const struct dirent *),
-      int (*compar)(const struct dirent **, const struct dirent **));
+ssize_t scandir(const char *dir, struct dirent ***namelist,
+      size_t (*filter)(const struct dirent *),
+      size_t (*compar)(const struct dirent **, const struct dirent **));
 
 extern osip_list_t dir_file_list;
 

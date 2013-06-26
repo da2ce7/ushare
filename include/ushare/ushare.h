@@ -170,6 +170,7 @@ struct ushare_t {
   bool daemon;
   bool override_iconv_err;
   char *cfg_file;
+  char * strNowPlaying;
   pthread_mutex_t termination_mutex;
   pthread_cond_t termination_cond;
 #ifdef HAVE_FAM

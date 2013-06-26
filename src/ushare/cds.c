@@ -306,15 +306,16 @@ static void
 }
 
 static void
-	didl_add_value (struct buffer_t *out, char *param, off_t value)
+	didl_add_value (struct buffer_t *out, char *param, ssize_t value)
 {
-	buffer_appendf (out, " %s=\"%ld\"", param, value);
+	
+	buffer_appendf (out, " %s=\"%llu\"", param, value);
 }
 
 static void
 	didl_add_item (struct buffer_t *out, int item_id,
 	int parent_id, char *restricted, char *class, char *title,
-	char *protocol_info, off_t size, char *url, int cover_id,
+	char *protocol_info, ssize_t size, char *url, int cover_id,
 	char *filter)
 {
 	buffer_appendf (out, "<%s", DIDL_ITEM);
